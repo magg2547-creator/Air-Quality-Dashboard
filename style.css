@@ -423,8 +423,6 @@
       gap: 14px;
       margin-bottom: 24px;
     }
-    @media (max-width: 900px) { .status-gauge-row { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 640px) { .status-gauge-row { grid-template-columns: 1fr; } }
 
     /* Air Quality Status Panel */
     .status-panel {
@@ -522,18 +520,6 @@
     .scale-labels span:nth-child(2),
     .scale-labels span:nth-child(3) { text-align: center; }
     .scale-labels span:nth-child(4) { text-align: right; }
-
-    @media (max-width: 640px) {
-      .aq-status-badge {
-        font-size: 0.9rem;
-        padding: 12px 14px;
-      }
-
-      .scale-labels {
-        font-size: 0.58rem;
-        gap: 6px;
-      }
-    }
 
     /* Gauge Panel */
     .gauge-panel {
@@ -646,7 +632,6 @@
       grid-template-columns: 1fr 290px;
       gap: 14px;
     }
-    @media (max-width: 900px) { .bottom-row { grid-template-columns: 1fr; } }
 
     /* Table */
     .table-card {
@@ -869,46 +854,102 @@
     }
 
     /* ===========================
-       RESPONSIVE TUNING
+       RESPONSIVE — mobile-last cascade
+       ลำดับ: 1024 → 900 → 768 → 640 → 480 → 420
+       (ใหญ่กว่ามาก่อนเสมอ เพื่อให้ขนาดเล็กกว่า override ได้ถูกต้อง)
     =========================== */
-    @media (max-width: 900px) {
-      .wrapper { padding: 0 18px 40px; }
-      header { padding: 22px 0 26px; }
-      .header-meta-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .charts-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    /* Tablet landscape / large tablet */
+    @media (max-width: 1024px) {
+      .header-meta-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .cards-grid         { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid        { grid-template-columns: repeat(2, 1fr); }
+      .analytics-grid     { grid-template-columns: repeat(3, 1fr); }
     }
 
+    /* Tablet portrait / large phone landscape */
+    @media (max-width: 900px) {
+      .wrapper            { padding: 0 18px 40px; }
+      header              { padding: 22px 0 26px; }
+      .header-meta-strip  { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .charts-grid        { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .status-gauge-row   { grid-template-columns: 1fr 1fr; }
+      .bottom-row         { grid-template-columns: 1fr; }
+    }
+
+    /* Mobile large — iOS auto-zoom prevention + layout tweaks */
+    @media (max-width: 768px) {
+      /* ป้องกัน iOS auto-zoom เมื่อ focus input */
+      input[type="date"],
+      input[type="text"],
+      .config-panel input { font-size: 16px !important; }
+
+      .config-panel input { min-width: 0; width: 100%; }
+      .table-card         { padding: 16px 12px; }
+
+      #dateFilter {
+        width: 100%;
+        min-width: unset;
+        appearance: none;
+      }
+      #dateFilter::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; inset: 0; width: 100%; cursor: pointer; }
+      #dateFilter::-webkit-datetime-edit              { padding-right: 4px; }
+    }
+
+    /* Mobile — ≤640px */
     @media (max-width: 640px) {
-      header { gap: 12px; }
-      .header-left { width: 100%; }
-      .header-right { width: 100%; }
-      .header-meta-strip { grid-template-columns: 1fr; margin: -6px 0 18px; }
-      .config-panel { padding: 16px; }
+      .wrapper            { padding: 0 16px 36px; }
+      header              { gap: 12px; }
+      .header-left        { width: 100%; }
+      .header-right       { width: 100%; }
+      .header-meta-strip  { grid-template-columns: 1fr; gap: 10px; margin: -6px 0 18px; }
+
+      .config-panel       { padding: 16px; }
       .config-panel input { min-width: 180px; width: 100%; }
-      .btn { width: 100%; justify-content: center; }
-      .cards-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
-      .charts-grid { grid-template-columns: 1fr; }
-      .chart-container { height: 170px; }
-      .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .table-card { padding: 16px; }
-      .table-header-row { flex-direction: column; align-items: stretch; }
+
+      /* ปุ่มหลักเต็มความกว้าง ยกเว้น Prev/Next pagination */
+      .btn:not(#btnPrevPage):not(#btnNextPage) { width: 100%; justify-content: center; }
+
+      .cards-grid         { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+      .charts-grid        { grid-template-columns: 1fr; }
+      .chart-container    { height: 170px; }
+      .analytics-grid     { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .status-gauge-row   { grid-template-columns: 1fr; }
+
+      .table-card         { padding: 16px; }
+      .table-header-row   { flex-direction: column; align-items: stretch; }
       .table-filter-shell { width: 100%; }
       .table-filter-field { min-width: 120px; }
       .table-filter-summary { width: 100%; text-align: left; }
-      .gauge-wrap { width: 170px; height: 98px; }
-      .gauge-labels { width: 170px; }
-      #qrModal { padding: 16px; }
-      .qr-card { padding: 20px; border-radius: 20px; }
+
+      .gauge-wrap         { width: 180px; height: 100px; }
+      .gauge-labels       { width: 180px; }
+
+      .aq-status-badge    { font-size: 0.9rem; padding: 12px 14px; }
+      .scale-labels       { font-size: 0.58rem; gap: 6px; }
+
+      #qrModal            { padding: 16px; }
+      .qr-card            { padding: 20px; border-radius: 20px; }
     }
 
+    /* Pagination buttons — small phones */
+    @media (max-width: 480px) {
+      #btnPrevPage, #btnNextPage {
+        padding: 6px 8px !important;
+        font-size: 0.65rem !important;
+      }
+      #pageInfo { font-size: 0.65rem !important; }
+    }
+
+    /* Small phone — ≤420px */
     @media (max-width: 420px) {
-      .wrapper { padding: 0 12px 28px; }
-      .cards-grid { grid-template-columns: 1fr; }
-      .analytics-grid { grid-template-columns: 1fr; }
-      .chart-container { height: 150px; }
-      .gauge-wrap { width: 150px; height: 90px; }
-      .gauge-labels { width: 150px; font-size: 0.58rem; }
-      thead th, tbody td { padding: 8px 10px; }
+      .wrapper            { padding: 0 12px 28px; }
+      .cards-grid         { grid-template-columns: 1fr; }
+      .analytics-grid     { grid-template-columns: 1fr; }
+      .chart-container    { height: 150px; }
+      .gauge-wrap         { width: 150px; height: 90px; }
+      .gauge-labels       { width: 150px; font-size: 0.58rem; }
+      thead th, tbody td  { padding: 8px 10px; }
     }
     /* ===========================
        LOADING STATE
@@ -957,61 +998,10 @@
     }
     #toast.show { transform: translateY(0); opacity: 1; }
 
-    /* ===========================
-       RESPONSIVE - Tablet (iPad landscape/portrait)
-    =========================== */
-    @media (max-width: 1024px) {
-      .header-meta-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .cards-grid     { grid-template-columns: repeat(2, 1fr); }
-      .charts-grid    { grid-template-columns: repeat(2, 1fr); }
-      .analytics-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    /* ===========================
-       RESPONSIVE - Mobile large (iPhone Plus, Android)
-    =========================== */
-    @media (max-width: 768px) {
-      /* Prevent iOS auto-zoom on text and date inputs */
-      input[type="date"], 
-      input[type="text"], 
-      .config-panel input {
-        font-size: 16px !important; 
-      }
-
-      .config-panel input {
-        min-width: 0;
-        width: 100%;
-      }
-
-      .table-card {
-        padding: 16px 12px;
-      }
-
-      #dateFilter {
-        width: 100%;
-        min-width: unset;
-        appearance: none;
-      }
-      #dateFilter::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; inset: 0; width: 100%; cursor: pointer; }
-      #dateFilter::-webkit-datetime-edit { padding-right: 4px; }
-    }
-
-    /* ===========================
-       RESPONSIVE - Mobile small
-    =========================== */
-    @media (max-width: 640px) {
-      .wrapper { padding: 0 16px 36px; }
-
-      .header-meta-strip {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .gauge-wrap { width: 180px; height: 100px; }
-      .gauge-labels { width: 180px; }
-    }
-
-    .sensor-card,
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    #logoTrigger { cursor: pointer; }
+    @keyframes barShimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
+    #topBar.running { animation: barShimmer 1.2s linear infinite; }
     .status-panel,
     .gauge-panel,
     .chart-card,
@@ -1324,19 +1314,6 @@
 }
 .toggle-switch input:checked + .toggle-slider:before {
   transform: translateX(16px);
-}
-
-/* ===========================
-   PAGINATION (Mobile Adjustments)
-=========================== */
-@media (max-width: 480px) {
-  #btnPrevPage, #btnNextPage {
-    padding: 6px 8px !important;
-    font-size: 0.65rem !important;
-  }
-  #pageInfo {
-    font-size: 0.65rem !important;
-  }
 }
 
     @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
