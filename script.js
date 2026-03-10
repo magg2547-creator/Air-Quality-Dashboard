@@ -120,6 +120,10 @@
     setHeaderConnection('Live', 'var(--good)');
 
     document.getElementById('sysDot').className = 'sys-dot live';
+    if (!isAiFetched) {
+      requestAIUpdate();
+      isAiFetched = true;
+    }
 
     resetCountdown();
   }
@@ -966,6 +970,43 @@
     showToast('Saved URL and started loading data.');
   }
 
+  // ==========================================
+  // 🤖 ระบบ AI Analyst (Gemini)
+  // ==========================================
+  let isAiFetched = false; // ตัวแปรเช็คว่าเคยให้ AI วิเคราะห์หรือยัง
+
+  async function requestAIUpdate() {
+    const aiTextEl = document.getElementById('aiSummaryText');
+    const scriptUrl = document.getElementById('sheetsUrl').value.trim();
+    
+    if (!aiTextEl || !scriptUrl) return;
+    if (!allData || allData.length === 0) {
+      aiTextEl.textContent = 'ยังไม่มีข้อมูลสำหรับให้ AI วิเคราะห์ครับ';
+      return;
+    }
+
+    // ดึงข้อมูลแถวล่าสุด
+    const latest = allData[allData.length - 1];
+    const pm25 = parseFloat(latest['PM2.5']) || 0;
+    const temp = parseFloat(latest['Temperature']) || 0;
+    const hum = parseFloat(latest['Humidity']) || 0;
+
+    aiTextEl.innerHTML = '<span style="color: #0284c7;">กำลังใช้ความคิด... (รอประมาณ 5-8 วินาที) ⏳</span>';
+    
+    try {
+      // เรียกไปยัง Apps Script พร้อมแนบค่าพารามิเตอร์
+      const url = `${scriptUrl}?action=getAI&pm25=${pm25}&temp=${temp}&hum=${hum}`;
+      const response = await fetch(url);
+      const text = await response.text();
+      
+      // แสดงผลที่ได้จาก AI
+      aiTextEl.innerHTML = `<strong>บทวิเคราะห์:</strong> ${escapeHTML(text)}`;
+    } catch (err) {
+      console.error(err);
+      aiTextEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อกับสมอง AI ครับ 😅';
+    }
+  }
+
   // Public API exposed for HTML event handlers
   global.AirQualityDashboard = {
     bootstrap,
@@ -981,6 +1022,7 @@
     changePage,
     changeRefreshInterval,
     toggleNotifications,
+    requestAIUpdate,
     sortTable,
   };
 
@@ -1000,6 +1042,7 @@
   global.changePage       = changePage;
   global.changeRefreshInterval = changeRefreshInterval;
   global.toggleNotifications = toggleNotifications;
+  global.requestAIUpdate = requestAIUpdate;
 
   // Kick off app once DOM is ready
   if (document.readyState === 'loading') {
