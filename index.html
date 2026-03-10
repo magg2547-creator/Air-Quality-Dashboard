@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0284c7"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="Air Quality"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230284c7'/%3E%3Cstop offset='100%25' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M63 117C63 117 45 81 80 54C115 27 135 63 117 85C104 104 77 99 63 117Z' fill='white' fill-opacity='.95'/%3E%3C/svg%3E"/>
+  <title>Air Quality Monitoring Dashboard</title>
+  <meta name="description" content="Dashboard for monitoring PM2.5, PM10, temperature, and humidity with real-time charts, analytics, and historical data."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<noscript><div style="margin:16px 24px;padding:12px 14px;border:1px solid rgba(220,38,38,0.22);border-radius:12px;background:#fff1f2;color:#991b1b;font-size:0.9rem">This dashboard requires JavaScript to load live data and interactive charts.</div></noscript>
+
+<div id="topBar" aria-hidden="true" style="
+  position:fixed;top:0;left:0;width:0%;height:3px;z-index:99999;
+  background:linear-gradient(90deg,#0284c7,#7c3aed,#0284c7);
+  background-size:200% 100%;
+  border-radius:0 2px 2px 0;
+  transition:width .3s ease,opacity .4s ease;
+  opacity:0;
+"></div>
+
+<div id="splash">
+  <div class="splash-bg"></div>
+  <div class="splash-content">
+    <div class="splash-logo" style="background:none;box-shadow:none;padding:0;overflow:hidden"><svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="80" rx="22" fill="url(#grad1)"/>
+  <path d="M28 52 C28 52 20 36 36 24 C52 12 60 28 52 38 C46 46 34 44 28 52Z" fill="white" fill-opacity="0.95"/>
+  <path d="M28 52 C32 44 40 38 48 30" stroke="#0284c7" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M55 34 C58 34 61 31 61 28" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+  <path d="M55 40 C61 40 66 36 66 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M55 46 C63 46 70 40 70 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg></div>
+    <div class="splash-title">Air Quality<br>Monitoring</div>
+    <div class="splash-sub">Real-time Environmental Monitoring System</div>
+    <div class="splash-bar-wrap">
+      <div class="splash-bar" id="splashBar"></div>
+    </div>
+    <div class="splash-status" id="splashStatus">Connecting...</div>
+  </div>
+</div>
+
+
+
+<main id="main-content" class="wrapper">
+
+  <header>
+    <div class="header-left">
+      <div class="logo-icon" id="logoTrigger" role="button" tabindex="0" aria-label="Open settings panel" title="Open settings panel" style="background:none;box-shadow:none;padding:0;overflow:hidden"><svg width="48" height="48" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="80" rx="22" fill="url(#grad2)"/>
+  <path d="M28 52 C28 52 20 36 36 24 C52 12 60 28 52 38 C46 46 34 44 28 52Z" fill="white" fill-opacity="0.95"/>
+  <path d="M28 52 C32 44 40 38 48 30" stroke="#0284c7" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M55 34 C58 34 61 31 61 28" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+  <path d="M55 40 C61 40 66 36 66 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M55 46 C63 46 70 40 70 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg></div>
+      <div class="header-title">
+        <h1>Air Quality Monitoring Dashboard</h1>
+        <p>Real-time Environmental Monitoring System</p>
+      </div>
+      <div class="pill" role="status" aria-live="polite">
+        <span class="dot" id="headerDot"></span>
+        <span id="headerStatus">Offline</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button type="button" class="btn btn-outline btn-qr" onclick="openQR()" title="QR Code" aria-label="Open QR code modal">
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <rect x="3" y="3" width="2" height="2" fill="currentColor"/>
+          <rect x="11" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <rect x="13" y="3" width="2" height="2" fill="currentColor"/>
+          <rect x="1" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <rect x="3" y="13" width="2" height="2" fill="currentColor"/>
+          <rect x="11" y="11" width="2" height="2" fill="currentColor"/>
+          <rect x="14" y="11" width="2" height="2" fill="currentColor"/>
+          <rect x="11" y="14" width="2" height="2" fill="currentColor"/>
+          <rect x="14" y="14" width="2" height="2" fill="currentColor"/>
+        </svg>
+        <span class="btn-label">QR</span>
+      </button>
+      <button type="button" class="btn btn-outline btn-refresh" onclick="loadData()" aria-label="Reload dashboard data">Reload <span class="btn-label">Data</span></button>
+      <button type="button" class="btn btn-outline btn-csv" onclick="downloadCSV()" aria-label="Download CSV file">Download <span class="btn-label">CSV</span></button>
+      <button type="button" class="btn btn-primary btn-pdf" onclick="openExportModal()" aria-label="Export report as PDF">Export <span class="btn-label">PDF</span></button>
+    </div>
+  </header>
+
+  <div class="header-meta-strip">
+    <div class="meta-chip">
+      <div>
+        <div class="meta-chip-label">Last Sync</div>
+        <div class="meta-chip-value" id="headerLastSync" aria-live="polite">Waiting for first load</div>
+      </div>
+    </div>
+    <div class="meta-chip">
+      <div>
+        <div class="meta-chip-label">Data Window</div>
+        <div class="meta-chip-value" id="headerRange" aria-live="polite">Latest reading ready</div>
+      </div>
+    </div>
+    <div class="meta-chip">
+      <div>
+        <div class="meta-chip-label">Records</div>
+        <div class="meta-chip-value" id="headerRecordCount" aria-live="polite">No data loaded</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="settingsPanel" aria-label="Dashboard settings" style="
+    display:none;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:20px 24px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow-lg);
+    animation: fadeIn .2s ease;
+  ">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Settings</span>
+      <button type="button" aria-label="Close settings" onclick="closeSettings()" style="width:32px;height:32px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer;font-size:0.95rem;color:#475569;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,0.82)">x</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <label for="sheetsUrl" style="font-size:0.78rem;color:var(--muted);white-space:nowrap">Apps Script URL</label>
+      <input type="url" id="sheetsUrl" inputmode="url" autocomplete="off" spellcheck="false" aria-describedby="settingsHelp" style="
+        flex:1;min-width:260px;
+        background:var(--surface2);
+        border:1px solid var(--border);
+        border-radius:8px;
+        padding:9px 14px;
+        font-family:var(--font-mono);
+        font-size:0.74rem;
+        color:var(--text);
+        outline:none;
+      " placeholder="https://script.google.com/macros/s/.../exec"/>
+      <span id="settingsHelp" class="sr-only">Paste a deployed Google Apps Script web app URL, then activate Save and Load.</span>
+      <button type="button" class="btn btn-primary" onclick="saveAndLoad()">Save & Load</button>
+    </div>
+  </section>
+
+
+
+
+  <h2 class="section-title" id="current-readings-title">Current Readings</h2>
+  <div class="cards-grid">
+    <div class="sensor-card card-pm25">
+      <div class="card-icon" aria-hidden="true" style="box-shadow:inset 0 0 0 1px rgba(255,255,255,0.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:block;transform:translateY(0.5px)"><path d="M4 14c2.5-4 5.5-6 9-6 3 0 5.2 1.3 7 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 18c2-2.8 4.3-4.2 7-4.2 2.3 0 4.3.9 6 2.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0.75"/><circle cx="8" cy="9" r="1.4" fill="currentColor"/><circle cx="13" cy="6.5" r="1.2" fill="currentColor" opacity="0.8"/></svg></div>
+      <div class="card-label">PM2.5</div>
+      <div class="card-value-row">
+        <div class="card-value" id="val-pm25">--</div>
+        <div class="card-unit">&micro;g/m&sup3;</div>
+      </div>
+      <div class="card-delta" id="delta-pm25">Awaiting data...</div>
+    </div>
+    <div class="sensor-card card-pm10">
+      <div class="card-icon" aria-hidden="true" style="box-shadow:inset 0 0 0 1px rgba(255,255,255,0.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:block;transform:scale(0.96)"><circle cx="8" cy="8" r="2.2" fill="currentColor"/><circle cx="15.5" cy="7" r="1.7" fill="currentColor" opacity="0.8"/><circle cx="12" cy="13" r="2.5" fill="currentColor" opacity="0.7"/><circle cx="17" cy="15.5" r="1.8" fill="currentColor" opacity="0.55"/><circle cx="6.5" cy="15.5" r="1.5" fill="currentColor" opacity="0.5"/></svg></div>
+      <div class="card-label">PM10</div>
+      <div class="card-value-row">
+        <div class="card-value" id="val-pm10">--</div>
+        <div class="card-unit">&micro;g/m&sup3;</div>
+      </div>
+      <div class="card-delta" id="delta-pm10">Awaiting data...</div>
+    </div>
+    <div class="sensor-card card-temp">
+      <div class="card-icon" aria-hidden="true" style="box-shadow:inset 0 0 0 1px rgba(255,255,255,0.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:block;transform:translateY(0.5px)"><path d="M10 5.5a2 2 0 1 1 4 0v7.1a4 4 0 1 1-4 0V5.5Z" stroke="currentColor" stroke-width="1.7"/><path d="M12 9v6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1.7" fill="currentColor"/></svg></div>
+      <div class="card-label">Temperature</div>
+      <div class="card-value-row">
+        <div class="card-value" id="val-temp">--</div>
+        <div class="card-unit">&deg;C</div>
+      </div>
+      <div class="card-delta" id="delta-temp">Awaiting data...</div>
+    </div>
+    <div class="sensor-card card-hum">
+      <div class="card-icon" aria-hidden="true" style="box-shadow:inset 0 0 0 1px rgba(255,255,255,0.55)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:block;transform:translateY(0.5px)"><path d="M12 4.5c3.2 4.1 5 6.9 5 9.3A5 5 0 1 1 7 13.8c0-2.4 1.8-5.2 5-9.3Z" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 15.5c.7 1.1 1.6 1.6 2.8 1.6 1.2 0 2.1-.5 2.7-1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0.7"/></svg></div>
+      <div class="card-label">Humidity</div>
+      <div class="card-value-row">
+        <div class="card-value" id="val-hum">--</div>
+        <div class="card-unit">%</div>
+      </div>
+      <div class="card-delta" id="delta-hum">Awaiting data...</div>
+    </div>
+  </div>
+
+  <div class="status-gauge-row">
+
+    <div class="status-panel">
+      <div class="section-title">Air Quality Index</div>
+
+      <div id="aqBadge" class="aq-status-badge status-good">
+        <span class="badge-dot" id="aqDot" style="background:var(--muted)"></span>
+        <span id="aqText">Waiting for data...</span>
+      </div>
+
+      <div class="status-scale-wrap" aria-hidden="true">
+        <div class="status-scale">
+          <div class="scale-item"></div>
+          <div class="scale-item"></div>
+          <div class="scale-item"></div>
+          <div class="scale-item"></div>
+        </div>
+        <div class="scale-labels">
+          <span>0 Good</span>
+          <span>50 Moderate</span>
+          <span>100 Unhealthy</span>
+          <span>150+ Danger</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gauge-panel">
+      <div class="section-title">PM2.5 Gauge</div>
+      <div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stop-color="#78be21"/>
+                <stop offset="35%"  stop-color="#f5c400"/>
+                <stop offset="65%"  stop-color="#f07d00"/>
+                <stop offset="100%" stop-color="#dc2626"/>
+              </linearGradient>
+            </defs>
+            <path id="gaugeTrack" class="gauge-track" d="M 15 105 A 85 85 0 0 1 185 105"/>
+            <path id="gaugeFill"  class="gauge-fill"  d="M 15 105 A 85 85 0 0 1 185 105"/>
+          </svg>
+          <div class="gauge-center-text">
+            <div class="gauge-number" id="gaugeNum">--</div>
+            <div class="gauge-unit">&micro;g/m&sup3;</div>
+          </div>
+        </div>
+        <div class="gauge-labels" style="width:200px">
+          <span>0</span>
+          <span style="position:relative;left:8px">75</span>
+          <span>150</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gauge-panel">
+      <div class="section-title">PM10 Gauge</div>
+      <div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <defs>
+              <linearGradient id="gaugeGrad10" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stop-color="#78be21"/>
+                <stop offset="35%"  stop-color="#f5c400"/>
+                <stop offset="65%"  stop-color="#f07d00"/>
+                <stop offset="100%" stop-color="#dc2626"/>
+              </linearGradient>
+            </defs>
+            <path id="gaugeTrack10" class="gauge-track" d="M 15 105 A 85 85 0 0 1 185 105"/>
+            <path id="gaugeFill10"  class="gauge-fill"  d="M 15 105 A 85 85 0 0 1 185 105" style="stroke:url(#gaugeGrad10)"/>
+          </svg>
+          <div class="gauge-center-text">
+            <div class="gauge-number" id="gaugeNum10" style="color:var(--pm10-color)">--</div>
+            <div class="gauge-unit">&micro;g/m&sup3;</div>
+          </div>
+        </div>
+        <div class="gauge-labels" style="width:200px">
+          <span>0</span>
+          <span style="position:relative;left:8px">150</span>
+          <span>300</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="trend-analysis-title">Trend Analysis</h2>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-card-title">
+        <span class="dot" style="background:var(--pm25-color)"></span>
+        PM2.5 Over Time
+      </div>
+      <div class="chart-container"><canvas id="chartPm25"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">
+        <span class="dot" style="background:var(--pm10-color)"></span>
+        PM10 Over Time
+      </div>
+      <div class="chart-container"><canvas id="chartPm10"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">
+        <span class="dot" style="background:var(--temp-color)"></span>
+        <span class="dot" style="background:var(--hum-color)"></span>
+        Temperature &amp; Humidity
+      </div>
+      <div class="chart-container"><canvas id="chartTempHum"></canvas></div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="analytics-summary-title">Analytics Summary</h2>
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <div class="analytics-label">Avg PM2.5</div>
+      <div class="analytics-value" id="stat-avgPm25">--</div>
+      <div class="analytics-sub">&micro;g/m&sup3;</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-label">Max PM2.5</div>
+      <div class="analytics-value" id="stat-maxPm25" style="color:var(--hazardous)">--</div>
+      <div class="analytics-sub">&micro;g/m&sup3;</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-label">Min PM2.5</div>
+      <div class="analytics-value" id="stat-minPm25" style="color:var(--good)">--</div>
+      <div class="analytics-sub">&micro;g/m&sup3;</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-label">Avg Temperature</div>
+      <div class="analytics-value" id="stat-avgTemp" style="color:var(--temp-color)">--</div>
+      <div class="analytics-sub">&deg;C</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-label">Avg Humidity</div>
+      <div class="analytics-value" id="stat-avgHum" style="color:var(--hum-color)">--</div>
+      <div class="analytics-sub">%</div>
+    </div>
+    <div class="analytics-card">
+      <div class="analytics-label">Total Records</div>
+      <div class="analytics-value" id="stat-total" style="color:var(--pm10-color)">--</div>
+      <div class="analytics-sub">data points</div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="historical-system-title">Historical Data &amp; System</h2>
+  <div class="bottom-row">
+
+    <div class="table-card">
+      <div class="table-header-row">
+        <span class="table-toolbar-hint" id="tableHint">Click column header to sort</span>
+        <div class="table-filter-shell">
+          <div class="table-filter-field">
+            <input type="text" id="dateFilter" placeholder="dd/mm/yyyy" aria-label="Filter by date"
+              style="
+                padding:9px 40px 9px 14px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+                background:#f4f5f7;
+                color:#334155;
+                font-weight:500;
+                letter-spacing:-0.01em;
+                font-size:0.8rem;
+                line-height:1.2;
+                outline:none;
+                cursor:pointer;
+                min-width:148px;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.75), 0 0 0 1px rgba(255,255,255,0.25);
+              "/>
+            <span aria-hidden="true" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;color:#475569;opacity:0.95">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <rect x="4.5" y="5.5" width="15" height="14" rx="3" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M8 4.2v3M16 4.2v3M4.5 9.5h15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </div>
+          <button type="button" aria-label="Clear date filter" onclick="clearDateFilter()" style="
+            padding:9px 15px;
+            border:1px solid #cbd5e1;
+            border-radius:10px;
+            background:#ffffff;
+            color:#334155;
+            font-size:0.78rem;
+            cursor:pointer;
+            font-family:var(--font-body);
+            transition:all .15s;
+            line-height:1.2;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+          " onmouseover="this.style.color='#0f172a';this.style.borderColor='#94a3b8';this.style.background='#f8fafc'"
+             onmouseout="this.style.color='#334155';this.style.borderColor='#cbd5e1';this.style.background='#ffffff'">
+            Clear
+          </button>
+          <span id="filterCount" class="table-filter-summary"></span>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table id="dataTable" aria-describedby="tableHint filterCount">
+          <caption class="sr-only">Historical air quality records. Use the column headers to sort the table.</caption>
+          <thead>
+            <tr>
+              <th scope="col" tabindex="0" role="button" aria-sort="none" data-sort-col="0" onclick="sortTable(0)" style="width:32%">Timestamp</th>
+              <th scope="col" tabindex="0" role="button" aria-sort="none" data-sort-col="1" onclick="sortTable(1)" style="width:17%">PM2.5</th>
+              <th scope="col" tabindex="0" role="button" aria-sort="none" data-sort-col="2" onclick="sortTable(2)" style="width:17%">PM10</th>
+              <th scope="col" tabindex="0" role="button" aria-sort="none" data-sort-col="3" onclick="sortTable(3)" style="width:17%">Temp</th>
+              <th scope="col" tabindex="0" role="button" aria-sort="none" data-sort-col="4" onclick="sortTable(4)" style="width:17%">Hum</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="5">
+                <div class="loading-overlay">
+                  Load data to see historical records
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+        <button type="button" class="btn btn-outline" id="btnPrevPage" onclick="changePage(-1)" style="padding: 6px 12px; font-size: 0.75rem;" disabled>&laquo; ก่อนหน้า</button>
+        <span id="pageInfo" style="font-size: 0.75rem; color: var(--muted); font-weight: 600;">หน้า 1 / 1</span>
+        <button type="button" class="btn btn-outline" id="btnNextPage" onclick="changePage(1)" style="padding: 6px 12px; font-size: 0.75rem;" disabled>ถัดไป &raquo;</button>
+      </div>
+    </div>
+
+    <div class="system-card">
+      <div class="section-title">System Status</div>
+
+      <div class="sys-row">
+        <div class="sys-label">Last Update</div>
+        <div class="sys-val" id="sysLastUpdate">--</div>
+      </div>
+
+      <div class="sys-row">
+        <div class="sys-label">
+          <span class="sys-dot" id="sysDot"></span>
+          Connection
+        </div>
+        <div class="sys-val" id="sysConn">Offline</div>
+      </div>
+
+      <div class="sys-row">
+        <div class="sys-label">Total Records</div>
+        <div class="sys-val" id="sysTotalRec">--</div>
+      </div>
+
+      <div class="sys-row">
+        <div class="sys-label">แจ้งเตือนฝุ่น (PM2.5 > 100)</div>
+        
+        <label class="toggle-switch" title="เปิด/ปิด การแจ้งเตือน">
+          <input type="checkbox" id="notifToggleCb" onchange="toggleNotifications()">
+          <span class="toggle-slider"></span>
+        </label>
+
+      </div>
+
+      <div class="sys-row" style="flex-wrap: wrap;">
+        <div class="sys-label">Auto Refresh</div>
+        
+        <div class="refresh-toggle">
+          <input type="radio" id="rt-1m" name="rtGroup" value="60" onchange="changeRefreshInterval(this.value)">
+          <label for="rt-1m">1m</label>
+
+          <input type="radio" id="rt-5m" name="rtGroup" value="300" onchange="changeRefreshInterval(this.value)" checked>
+          <label for="rt-5m">5m</label>
+
+          <input type="radio" id="rt-15m" name="rtGroup" value="900" onchange="changeRefreshInterval(this.value)">
+          <label for="rt-15m">15m</label>
+
+          <input type="radio" id="rt-pause" name="rtGroup" value="-1" onchange="changeRefreshInterval(this.value)">
+          <label for="rt-pause">Pause</label>
+        </div>
+      </div>
+
+      <div class="refresh-wrap">
+        <div class="refresh-label">
+          <span>Next auto-refresh</span>
+          <span id="countdownText">5:00</span>
+        </div>
+        <div class="refresh-track">
+          <div class="refresh-fill" id="refreshFill" style="width:100%"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle" aria-hidden="true" onclick="if(event.target===this) closeQR()">
+  <div class="qr-card">
+    <div class="qr-title" id="qrModalTitle">
+      <svg width="44" height="44" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 10px">
+        <defs>
+          <linearGradient id="gradQR" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0284c7"/>
+            <stop offset="100%" stop-color="#7c3aed"/>
+          </linearGradient>
+        </defs>
+        <rect width="80" height="80" rx="22" fill="url(#gradQR)"/>
+        <path d="M28 52 C28 52 20 36 36 24 C52 12 60 28 52 38 C46 46 34 44 28 52Z" fill="white" fill-opacity="0.95"/>
+        <path d="M28 52 C32 44 40 38 48 30" stroke="#0284c7" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M55 34 C58 34 61 31 61 28" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+        <path d="M55 40 C61 40 66 36 66 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M55 46 C63 46 70 40 70 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+      </svg>
+      Scan to Open Dashboard
+    </div>
+    <div id="qrCanvas"></div>
+    <div class="qr-url" id="qrUrlText"></div>
+    <button type="button" class="qr-close" onclick="closeQR()">Close</button>
+  </div>
+</div>
+<div id="exportModal" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target===this) closeExportModal()" 
+  style="position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); z-index: 10000;">
+  
+  <div class="qr-card" style="max-width: 320px;">
+    <div class="qr-title" style="margin-bottom: 8px;">
+      <span style="font-size: 24px; display: block; margin-bottom: 12px;">📄</span>
+      Export PDF Report
+    </div>
+    <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 18px; line-height: 1.5;">
+      เลือกวันที่ที่ต้องการดาวน์โหลดรายงาน หรือเว้นว่างไว้เพื่อดาวน์โหลดข้อมูลทั้งหมด
+    </p>
+    
+    <div style="margin-bottom: 20px; text-align: left;">
+      <label for="pdfDateFilter" style="display: block; font-size: 0.7rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">เลือกวันที่</label>
+      <input type="text" id="pdfDateFilter" placeholder="ดึงข้อมูลทั้งหมด" aria-label="Select date for PDF"
+        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; background: #f8fafc; color: #0f172a; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);" />
+      <div style="text-align: right; margin-top: 6px;">
+        <button type="button" onclick="if(pdfDatePicker) pdfDatePicker.clear(); else document.getElementById('pdfDateFilter').value='';" style="background: none; border: none; font-size: 0.7rem; color: #0ea5e9; cursor: pointer; text-decoration: underline;">เคลียร์วันที่</button>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button type="button" class="btn btn-outline" onclick="closeExportModal()" style="flex: 1; justify-content: center;">ยกเลิก</button>
+      <button type="button" class="btn btn-primary" onclick="confirmExportPDF()" style="flex: 1; justify-content: center;">ดาวน์โหลด</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" aria-live="polite" aria-atomic="true"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/th.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/customParseFormat.min.js"></script>
+<script>
+  // เปิดใช้งาน Plugin customParseFormat เพื่อให้รองรับวันที่หลายรูปแบบ
+  dayjs.extend(window.dayjs_plugin_customParseFormat);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="data.js"></script>
+<script src="charts.js"></script>
+<script src="script.js"></script>
+<!-- PWA Install Banner -->
+<div id="pwaInstallBanner" aria-live="polite" aria-atomic="true" style="
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  z-index: 99998;
+  width: min(calc(100vw - 32px), 420px);
+  background: #ffffff;
+  border: 1px solid rgba(2,132,199,0.18);
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(2,132,199,0.18), 0 2px 12px rgba(0,0,0,0.1);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+">
+  <div style="
+    width: 52px; height: 52px; flex-shrink: 0;
+    background: linear-gradient(135deg, #0284c7, #7c3aed);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(2,132,199,0.35);
+    font-size: 26px;
+  ">🌬️</div>
+  <div style="flex: 1; min-width: 0;">
+    <div style="font-weight: 700; font-size: 0.92rem; color: #0f172a; margin-bottom: 3px; font-family: 'DM Sans', sans-serif;">
+      ติดตั้งเป็น App
+    </div>
+    <div style="font-size: 0.75rem; color: #64748b; font-family: 'DM Sans', sans-serif; line-height: 1.45;">
+      เพิ่มไปยังหน้าจอหลัก เพื่อเปิดได้เร็วขึ้น
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+    <button id="pwaInstallBtn" style="
+      padding: 9px 18px;
+      background: linear-gradient(180deg, #0ea5e9, #0284c7);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(2,132,199,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+    " onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 14px rgba(2,132,199,0.45)'"
+       onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(2,132,199,0.35)'">
+      ติดตั้งเลย
+    </button>
+    <button id="pwaDismissBtn" style="
+      padding: 7px 18px;
+      background: transparent;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    " onmouseover="this.style.color='#475569';this.style.borderColor='#94a3b8'"
+       onmouseout="this.style.color='#94a3b8';this.style.borderColor='#e2e8f0'">
+      ไม่ใช่ตอนนี้
+    </button>
+  </div>
+</div>
+
+<script>
+// ─── PWA: Service Worker Registration ───────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[PWA] SW registered, scope:', reg.scope))
+      .catch(err => console.warn('[PWA] SW registration failed:', err));
+  });
+}
+
+// ─── PWA: Install Prompt ─────────────────────────────────────────────────────
+(function () {
+  const DISMISS_KEY = 'pwa-install-dismissed';
+  let deferredPrompt = null;
+  const banner = document.getElementById('pwaInstallBanner');
+  const installBtn = document.getElementById('pwaInstallBtn');
+  const dismissBtn = document.getElementById('pwaDismissBtn');
+
+  function showBanner() {
+    if (!banner) return;
+    banner.style.display = 'flex';
+    banner.style.pointerEvents = 'auto';
+    // Trigger animation next frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        banner.style.transform = 'translateX(-50%) translateY(0)';
+        banner.style.opacity = '1';
+      });
+    });
+  }
+
+  function hideBanner() {
+    if (!banner) return;
+    banner.style.transform = 'translateX(-50%) translateY(120%)';
+    banner.style.opacity = '0';
+    banner.style.pointerEvents = 'none';
+    setTimeout(() => { banner.style.display = 'none'; }, 400);
+  }
+
+  // Capture the install prompt event (Chrome/Edge/Android)
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Don't show if user dismissed within last 7 days
+    const dismissed = localStorage.getItem(DISMISS_KEY);
+    if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+
+    // Show after a short delay so the page finishes loading first
+    setTimeout(showBanner, 2800);
+  });
+
+  // Install button clicked
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      hideBanner();
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('[PWA] Install outcome:', outcome);
+      deferredPrompt = null;
+    });
+  }
+
+  // Dismiss button clicked
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      hideBanner();
+      localStorage.setItem(DISMISS_KEY, Date.now());
+    });
+  }
+
+  // Hide banner if already installed
+  window.addEventListener('appinstalled', () => {
+    hideBanner();
+    deferredPrompt = null;
+    console.log('[PWA] App installed!');
+  });
+})();
+</script>
+
+</body>
+</html>
