@@ -1384,4 +1384,4 @@
   backdrop-filter: blur(10px);
   z-index: 10000;
 }
-#exportModal[style*="flex"] { display: flex; }
+#exportModal.open { display: flex; }

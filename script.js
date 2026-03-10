@@ -847,7 +847,7 @@
 
   function openExportModal() {
     const modal = document.getElementById('exportModal');
-    modal.style.display = 'flex';
+    modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
 
     // 🌟 ล็อคไม่ให้หน้าจอพื้นหลังเลื่อนได้
@@ -875,7 +875,7 @@
 
   function closeExportModal() {
     const modal = document.getElementById('exportModal');
-    modal.style.display = 'none';
+    modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
 
     // 🌟 ปลดล็อคให้หน้าจอพื้นหลังกลับมาเลื่อนได้ตามปกติ
