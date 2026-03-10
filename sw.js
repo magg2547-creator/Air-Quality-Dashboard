@@ -1,5 +1,10 @@
 // sw.js — Service Worker for Air Quality PWA
-const CACHE_NAME = 'aqm-v1';
+
+// ⚠️  เปลี่ยน BUILD_VERSION ทุกครั้งที่ deploy โค้ดใหม่
+//     เพื่อบังคับให้ browser ลบ cache เก่าและโหลดไฟล์ล่าสุด
+//     แนะนำใช้ date+time เช่น '20260311-1' หรือ git commit hash
+const BUILD_VERSION = '20260311-1';
+const CACHE_NAME = `aqm-v${BUILD_VERSION}`;
 const STATIC_ASSETS = [
   './',
   './index.html',

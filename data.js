@@ -1,10 +1,20 @@
 // data.js — State, data normalisation, timestamp parsing
 
-// State
-let allData  = [];
-let sortCol  = 0;
-let sortAsc  = false;
-let datePicker = null;
+// State — centralised into a single object to avoid scattered globals
+const AppState = {
+  allData:    [],
+  sortCol:    0,
+  sortAsc:    false,
+  datePicker: null,
+};
+
+// Backward-compatible aliases (used throughout script.js)
+// Reading: use AppState.xxx directly where possible
+// Writing: assign to both alias and AppState so existing code keeps working
+let allData    = AppState.allData;   // NOTE: re-assign AppState.allData when replacing the array
+let sortCol    = AppState.sortCol;
+let sortAsc    = AppState.sortAsc;
+let datePicker = AppState.datePicker;
 
 const COL_MAP = {
   'Timestamp':   ['timestamp', 'time', 'datetime', 'date'],
@@ -71,7 +81,8 @@ function parseTimestamp(value) {
     ];
 
     // ใช้ dayjs พร้อม plugin (ที่ดึงมาจาก index.html) ช่วยประมวลผล
-    const parsed = dayjs(raw, formats, false); 
+    // strict: true ป้องกัน false-positive เช่น "99/99/9999" ที่อาจผ่านได้โดยไม่ตั้งใจ
+    const parsed = dayjs(raw, formats, true); 
 
     if (parsed.isValid()) {
       return parsed.toDate();

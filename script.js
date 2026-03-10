@@ -80,8 +80,8 @@
     document.getElementById('aqText').textContent =
       status.label + ' - PM2.5 ' + pm25.toFixed(1) + ' \u00B5g/m\u00B3';
 
-    updateGauge(pm25);
-    updateGauge10(pm10);
+    updateGaugePm25(pm25);
+    updateGaugePm10(pm10);
     updateCharts(rows);
 
     // Analytics: single pass (was 2 separate loops before)
@@ -832,28 +832,13 @@
     const modal = document.getElementById('qrModal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = ''; // คลายล็อคหน้าจอ
-    _qrInstance = null;
-    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
-      lastFocusedElement.focus();
-    }
-  }
-
-  function closeQR() {
-    const modal = document.getElementById('qrModal');
-    modal.classList.remove('show');
-    modal.setAttribute('aria-hidden', 'true');
-
     document.body.style.overflow = '';
-
     _qrInstance = null;
     if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
       lastFocusedElement.focus();
     }
   }
 
-  // Close the QR modal with Escape.
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQR(); });
 
   /* ===================================================
      EXPORT PDF MODAL

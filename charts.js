@@ -8,7 +8,35 @@ if (hasChartLib) {
   Chart.defaults.font.family = "'DM Sans', sans-serif";
 }
 const charts = {};
+// GAUGE_LEN = circumference of the SVG arc (radius = 85px, as defined in index.html)
 const GAUGE_LEN = Math.PI * 85;
+
+const _LEGEND_CONFIG = {
+  position: 'top',
+  labels: {
+    boxWidth: 8,
+    padding: 16,
+    font: { size: 11 },
+    usePointStyle: true,
+    pointStyle: 'circle',
+    generateLabels(chart) {
+      const base = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+      base.forEach(l => { l.text = '  ' + l.text; });
+      return base;
+    }
+  }
+};
+
+const _TOOLTIP_CONFIG = {
+  backgroundColor: '#1e293b',
+  titleColor: '#94a3b8',
+  bodyColor: '#f1f5f9',
+  borderColor: 'rgba(255,255,255,0.08)',
+  borderWidth: 1,
+  padding: 12,
+  cornerRadius: 8
+};
+
 
 function makeChart(id, datasets, yLabel) {
     if (!hasChartLib) return null;
@@ -21,30 +49,8 @@ function makeChart(id, datasets, yLabel) {
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            position: 'top',
-            labels: {
-              boxWidth: 8,
-              padding: 16,
-              font: { size: 11 },
-              usePointStyle: true,
-              pointStyle: 'circle',
-              generateLabels(chart) {
-                const base = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                base.forEach(l => { l.text = '  ' + l.text; });
-                return base;
-              }
-            }
-          },
-          tooltip: {
-            backgroundColor: '#1e293b',
-            titleColor: '#94a3b8',
-            bodyColor: '#f1f5f9',
-            borderColor: 'rgba(255,255,255,0.08)',
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8
-          }
+          legend: _LEGEND_CONFIG,
+          tooltip: _TOOLTIP_CONFIG
         },
         scales: {
           x: {
@@ -154,30 +160,8 @@ function initCharts() {
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            position: 'top',
-            labels: {
-              boxWidth: 8,
-              padding: 16,
-              font: { size: 11 },
-              usePointStyle: true,
-              pointStyle: 'circle',
-              generateLabels(chart) {
-                const base = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                base.forEach(l => { l.text = '  ' + l.text; });
-                return base;
-              }
-            }
-          },
-          tooltip: {
-            backgroundColor: '#1e293b',
-            titleColor: '#94a3b8',
-            bodyColor: '#f1f5f9',
-            borderColor: 'rgba(0,0,0,0.1)',
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8
-          }
+          legend: _LEGEND_CONFIG,
+          tooltip: { ..._TOOLTIP_CONFIG, borderColor: 'rgba(0,0,0,0.1)' }
         },
         scales: {
           x: {
@@ -271,26 +255,25 @@ function initGauge() {
   }
 
 
-function updateGauge(value) {
-    const maxVal = 150;
+/**
+ * updateGauge(gaugeId, numId, value, maxVal)
+ * Generic gauge updater — eliminates duplicated code between PM2.5 and PM10 gauges.
+ *   gaugeId : id of the <path> fill element   (e.g. 'gaugeFill', 'gaugeFill10')
+ *   numId   : id of the numeric label element  (e.g. 'gaugeNum',  'gaugeNum10')
+ *   value   : current reading
+ *   maxVal  : value that maps to 100% of the arc
+ */
+function updateGauge(gaugeId, numId, value, maxVal) {
     const pct  = Math.min(Math.max(value, 0) / maxVal, 1);
-    const fill = document.getElementById('gaugeFill');
+    const fill = document.getElementById(gaugeId);
     fill.style.strokeDashoffset = GAUGE_LEN * (1 - pct);
-    const gn = document.getElementById('gaugeNum');
+    const gn = document.getElementById(numId);
     gn.classList.remove('pop'); void gn.offsetWidth;
     gn.classList.add('pop');
     gn.textContent = value.toFixed(1);
   }
 
-
-function updateGauge10(value) {
-    const maxVal = 300;
-    const pct  = Math.min(Math.max(value, 0) / maxVal, 1);
-    const fill = document.getElementById('gaugeFill10');
-    fill.style.strokeDashoffset = GAUGE_LEN * (1 - pct);
-    const gn10 = document.getElementById('gaugeNum10');
-    gn10.classList.remove('pop'); void gn10.offsetWidth;
-    gn10.classList.add('pop');
-    gn10.textContent = value.toFixed(1);
-  }
+// Convenience wrappers used by script.js (keep original call-sites unchanged)
+function updateGaugePm25(value)  { updateGauge('gaugeFill',   'gaugeNum',   value, 150); }
+function updateGaugePm10(value)  { updateGauge('gaugeFill10', 'gaugeNum10', value, 300); }
 
