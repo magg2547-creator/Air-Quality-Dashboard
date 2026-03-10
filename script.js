@@ -757,12 +757,14 @@
     const wrap    = document.getElementById('qrCanvas');
     const urlText = document.getElementById('qrUrlText');
 
-    document.body.style.overflow = 'hidden';
-
     urlText.textContent = DASHBOARD_URL;
     wrap.innerHTML = '';
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    
+    // ล็อคหน้าจอพื้นหลังไม่ให้เลื่อนเวลาเปิด Popup (ถ้ามี)
+    document.body.style.overflow = 'hidden';
+
     setTimeout(() => { const closeBtn = modal.querySelector('.qr-close'); if (closeBtn) closeBtn.focus(); }, 0);
 
     if (!global.QRCode) {
@@ -772,6 +774,9 @@
     }
 
     try {
+      // 🌟 ตั้งค่าให้กล่อง QR รองรับการวางโลโก้ทับแบบ CSS
+      wrap.style.position = 'relative';
+
       _qrInstance = new QRCode(wrap, {
         text: DASHBOARD_URL,
         width: 220,
@@ -780,73 +785,54 @@
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
       });
+
+      // 🌟 สร้างโลโก้และใช้ CSS แปะทับตรงกลาง
+      const logoSize = 48;
+      const logoDiv = document.createElement('div');
+      logoDiv.style.position = 'absolute';
+      logoDiv.style.top = '50%';
+      logoDiv.style.left = '50%';
+      logoDiv.style.transform = 'translate(-50%, -50%)';
+      logoDiv.style.width = logoSize + 'px';
+      logoDiv.style.height = logoSize + 'px';
+      logoDiv.style.backgroundColor = '#ffffff';
+      logoDiv.style.borderRadius = '12px';
+      logoDiv.style.padding = '4px';
+      logoDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.15)';
+      logoDiv.style.display = 'flex';
+      logoDiv.style.alignItems = 'center';
+      logoDiv.style.justifyContent = 'center';
+      
+      // วาดไอคอนใบไม้ด้านใน
+      logoDiv.innerHTML = `
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#0284c7,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <svg width="26" height="26" viewBox="0 0 80 80" fill="none">
+            <path d="M28 52 C28 52 20 36 36 24 C52 12 60 28 52 38 C46 46 34 44 28 52Z" fill="white" fill-opacity="0.95"/>
+            <path d="M28 52 C32 44 40 38 48 30" stroke="#0284c7" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M55 34 C58 34 61 31 61 28" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
+            <path d="M55 40 C61 40 66 36 66 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+            <path d="M55 46 C63 46 70 40 70 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+          </svg>
+        </div>
+      `;
+      wrap.appendChild(logoDiv);
+
     } catch (err) {
       wrap.innerHTML = '<div style="padding:24px 18px;border:1px dashed #cbd5e1;border-radius:14px;color:#64748b;font-size:0.82rem;text-align:center">Unable to render QR<br>Open this link directly instead.</div>';
       showToast('Unable to render QR code.');
-      return;
     }
+  }
 
-    setTimeout(() => {
-      const qrImg = wrap.querySelector('img') || wrap.querySelector('canvas');
-      if (!qrImg) return;
-
-      const c = document.createElement('canvas');
-      c.width = 220;
-      c.height = 220;
-      const ctx = c.getContext('2d');
-      if (!ctx) return;
-
-      const drawLogo = () => {
-        ctx.drawImage(qrImg, 0, 0, 220, 220);
-        const logoSize = 48;
-        const x = (220 - logoSize) / 2;
-        const y = (220 - logoSize) / 2;
-
-        ctx.save();
-        ctx.fillStyle = '#ffffff';
-        if (typeof ctx.roundRect === 'function') {
-          ctx.beginPath();
-          ctx.roundRect(x - 4, y - 4, logoSize + 8, logoSize + 8, 12);
-          ctx.shadowColor = 'rgba(0,0,0,0.15)';
-          ctx.shadowBlur = 6;
-          ctx.fill();
-        } else {
-          ctx.fillRect(x - 4, y - 4, logoSize + 8, logoSize + 8);
-        }
-        ctx.restore();
-
-        const svgStr = `<svg width="${logoSize}" height="${logoSize}" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="gL" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#0284c7"/>
-              <stop offset="100%" stop-color="#7c3aed"/>
-            </linearGradient>
-          </defs>
-          <rect width="80" height="80" rx="22" fill="url(#gL)"/>
-          <path d="M28 52 C28 52 20 36 36 24 C52 12 60 28 52 38 C46 46 34 44 28 52Z" fill="white" fill-opacity="0.95"/>
-          <path d="M28 52 C32 44 40 38 48 30" stroke="#0284c7" stroke-width="2" stroke-linecap="round" fill="none"/>
-          <path d="M55 34 C58 34 61 31 61 28" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.85"/>
-          <path d="M55 40 C61 40 66 36 66 30" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
-          <path d="M55 46 C63 46 70 40 70 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
-        </svg>`;
-        const blob = new Blob([svgStr], { type: 'image/svg+xml' });
-        const svgUrl = URL.createObjectURL(blob);
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, x, y, logoSize, logoSize);
-          URL.revokeObjectURL(svgUrl);
-          qrImg.replaceWith(c);
-        };
-        img.src = svgUrl;
-      };
-
-      if (qrImg.tagName === 'IMG') {
-        if (qrImg.complete) drawLogo();
-        else qrImg.onload = drawLogo;
-      } else {
-        drawLogo();
-      }
-    }, 50);
+  // อัปเดตฟังก์ชันปิด QR ให้คลายการล็อคหน้าจอด้วย
+  function closeQR() {
+    const modal = document.getElementById('qrModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = ''; // คลายล็อคหน้าจอ
+    _qrInstance = null;
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
   }
 
   function closeQR() {

@@ -650,6 +650,7 @@ if ('serviceWorker' in navigator) {
 // ─── PWA: Install Prompt ─────────────────────────────────────────────────────
 (function () {
   const DISMISS_KEY = 'pwa-install-dismissed';
+  const INSTALLED_KEY = 'pwa-installed-flag'; // 🌟 เพิ่มตัวแปรสำหรับจำว่าติดตั้งแล้ว
   let deferredPrompt = null;
   const banner = document.getElementById('pwaInstallBanner');
   const installBtn = document.getElementById('pwaInstallBtn');
@@ -678,6 +679,16 @@ if ('serviceWorker' in navigator) {
 
   // Capture the install prompt event (Chrome/Edge/Android)
   window.addEventListener('beforeinstallprompt', e => {
+    // 🌟 1. เช็คว่าใช้งานผ่าน App อยู่แล้วหรือไม่ (Standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      return; 
+    }
+
+    // 🌟 2. เช็คว่าเคยติดตั้งแอปไปแล้วหรือยังผ่าน Flag ในเครื่อง
+    if (localStorage.getItem(INSTALLED_KEY) === 'true') {
+      return;
+    }
+
     e.preventDefault();
     deferredPrompt = e;
 
@@ -697,6 +708,11 @@ if ('serviceWorker' in navigator) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log('[PWA] Install outcome:', outcome);
+      
+      // 🌟 ถ้าผู้ใช้กดยอมรับการติดตั้ง ให้บันทึกค่าว่าติดตั้งแล้ว
+      if (outcome === 'accepted') {
+        localStorage.setItem(INSTALLED_KEY, 'true');
+      }
       deferredPrompt = null;
     });
   }
@@ -709,14 +725,19 @@ if ('serviceWorker' in navigator) {
     });
   }
 
-  // Hide banner if already installed
+  // Hide banner if already installed (เมื่อระบบติดตั้งเสร็จสมบูรณ์)
   window.addEventListener('appinstalled', () => {
     hideBanner();
     deferredPrompt = null;
+    // 🌟 บันทึกค่าว่าติดตั้งแล้ว เพื่อไม่ให้แสดงแบนเนอร์อีกในอนาคต
+    localStorage.setItem(INSTALLED_KEY, 'true');
     console.log('[PWA] App installed!');
   });
 })();
 </script>
 
+</body>
+</html>
+</script>
 </body>
 </html>
