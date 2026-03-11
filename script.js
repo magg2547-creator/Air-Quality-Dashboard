@@ -341,9 +341,34 @@ function updatePaginationUI(page, total) {
   function splashHide() {
     splashProgress(100, 'Ready');
     setTimeout(() => {
-      document.getElementById('splash').classList.add('hide');
+      const s = document.getElementById('splash');
+      if (s) s.classList.add('hide');
     }, 400);
   }
+
+  function forceHideSplash(msg) {
+    try {
+      splashProgress(100, msg || 'Ready');
+    } catch (e) {
+      // ignore
+    }
+    const s = document.getElementById('splash');
+    if (s) s.classList.add('hide');
+  }
+
+  window.addEventListener('error', () => {
+    forceHideSplash('Error');
+    try { topBarError(); } catch (e) {}
+    showToast('Unexpected error occurred. Please reload the page.');
+  });
+
+  window.addEventListener('unhandledrejection', () => {
+    forceHideSplash('Error');
+    try { topBarError(); } catch (e) {}
+    showToast('Unexpected error occurred. Please reload the page.');
+  });
+
+   param($m) $m.Value + $insert 
 
   function topBarStart() {
     const b = document.getElementById('topBar');
@@ -832,6 +857,12 @@ function updatePaginationUI(page, total) {
 
     setTimeout(() => splashProgress(60, 'Loading latest data...'), 300);
     loadData();
+    setTimeout(() => {
+      const s = document.getElementById('splash');
+      if (s && !s.classList.contains('hide')) {
+        forceHideSplash('Ready');
+      }
+    }, 12000);
 
     let logoClickCount = 0;
     let logoClickTimer = null;
@@ -965,6 +996,8 @@ function updatePaginationUI(page, total) {
     bootstrap();
   }
 })(window);
+
+
 
 
 
