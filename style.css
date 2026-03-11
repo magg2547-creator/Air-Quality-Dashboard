@@ -1,4 +1,4 @@
-﻿/* ===========================
+/* ===========================
        CSS VARIABLES & RESET
     =========================== */
     :root {
@@ -26,7 +26,7 @@
       --shadow:     0 2px 12px rgba(0,0,0,0.08);
       --shadow-lg:  0 8px 32px rgba(0,0,0,0.12);
       --font-mono:  'Space Mono', monospace;
-      --font-body:  'DM Sans', sans-serif;
+      --font-body:  'Noto Sans Thai', 'DM Sans', sans-serif;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1190,7 +1190,7 @@
 }
 
 .splash-title {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: clamp(1.4rem, 6vw, 2.4rem);
   font-weight: 700;
   color: #0f172a;
@@ -1202,7 +1202,7 @@
 }
 
 .splash-sub {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: clamp(0.65rem, 2.5vw, 0.82rem);
   color: #64748b;
   letter-spacing: 0.04em;
@@ -1787,7 +1787,7 @@ html {
   border-radius: 10px;
   background: #f8fafc;
   color: #0f172a;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.85rem;
   outline: none;
   cursor: pointer;
@@ -1841,13 +1841,13 @@ html {
   font-size: 0.92rem;
   color: #0f172a;
   margin-bottom: 3px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
 }
 
 .pwa-desc {
   font-size: 0.75rem;
   color: #64748b;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   line-height: 1.45;
 }
 
@@ -1864,7 +1864,7 @@ html {
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.8rem;
   cursor: pointer;
@@ -1884,7 +1884,7 @@ html {
   color: #94a3b8;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;

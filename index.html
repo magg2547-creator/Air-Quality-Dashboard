@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin/>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin/>
 
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
@@ -130,7 +130,7 @@
     </div>
     <div class="settings-row">
       <label for="sheetsUrl" class="settings-label">Apps Script URL</label>
-      <input type="url" id="sheetsUrl" class="settings-input" inputmode="url" autocomplete="off" spellcheck="false" aria-describedby="settingsHelp" placeholder="https://script.google.com/macros/s/.../exec"/>
+      <input type="url" id="sheetsUrl" class="settings-input" inputmode="url" autocomplete="off" spellcheck="false" aria-describedby="settingsHelp" placeholder="เช่น 10/03/2026"/>
       <span id="settingsHelp" class="sr-only">Paste a deployed Google Apps Script web app URL, then activate Save and Load.</span>
       <button type="button" class="btn btn-primary" onclick="saveAndLoad()">Save & Load</button>
     </div>
@@ -142,9 +142,9 @@
     <div class="ai-body">
       <div class="ai-header">
         <h3 class="ai-title">Gemini AI Analyst</h3>
-        <button type="button" class="ai-btn" onclick="requestAIUpdate()">???????????????</button>
+        <button type="button" class="ai-btn" onclick="requestAIUpdate()">ขอวิเคราะห์ใหม่</button>
       </div>
-      <p id="aiSummaryText" class="ai-text">???????????????? AI...</p>
+      <p id="aiSummaryText" class="ai-text">กำลังรอผลวิเคราะห์จาก AI...</p>
     </div>
   </div>
   <div class="cards-grid">
@@ -348,7 +348,7 @@
         </div>
         <div class="table-filter-shell">
           <div class="table-filter-field">
-            <input type="text" id="dateFilter" class="table-filter-input" placeholder="dd/mm/yyyy" aria-label="Filter by date"/>
+            <input type="text" id="dateFilter" class="table-filter-input" placeholder="เช่น 10/03/2026" aria-label="Filter by date"/>
             <span aria-hidden="true" class="table-filter-icon">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <rect x="4.5" y="5.5" width="15" height="14" rx="3" stroke="currentColor" stroke-width="1.6"/>
@@ -384,9 +384,9 @@
         </table>
       </div>
       <div class="table-pagination">
-        <button type="button" class="btn btn-outline btn-small" id="btnPrevPage" onclick="changePage(-1)" disabled>&laquo; ????????</button>
-        <span id="pageInfo" class="page-info">???? 1 / 1</span>
-        <button type="button" class="btn btn-outline btn-small" id="btnNextPage" onclick="changePage(1)" disabled>????? &raquo;</button>
+        <button type="button" class="btn btn-outline btn-small" id="btnPrevPage" onclick="changePage(-1)" disabled>&laquo; ก่อนหน้า</button>
+        <span id="pageInfo" class="page-info">หน้า 1 / 1</span>
+        <button type="button" class="btn btn-outline btn-small" id="btnNextPage" onclick="changePage(1)" disabled>ถัดไป &raquo;</button>
       </div>
     </div>
 
@@ -412,8 +412,8 @@
       </div>
 
       <div class="sys-row">
-        <div class="sys-label">????????????? (PM2.5 > 100)</div>
-        <label class="toggle-switch" title="????/??? ????????????">
+        <div class="sys-label">แจ้งเตือนฝุ่น (PM2.5 > 100)</div>
+        <label class="toggle-switch" title="เปิด/ปิด ระบบแจ้งเตือน">
           <input type="checkbox" id="notifToggleCb" onchange="toggleNotifications()">
           <span class="toggle-slider"></span>
         </label>
@@ -483,19 +483,19 @@
       <span class="export-icon">PDF</span>
       Export PDF Report
     </div>
-    <p class="export-desc" id="exportModalDesc">??????????????????????????? PDF ??????????????????????????</p>
+    <p class="export-desc" id="exportModalDesc">เลือกวันที่เพื่อส่งออกรายงาน PDF หรือปล่อยว่างเพื่อส่งออกทั้งหมด</p>
 
     <div class="export-filter">
-      <label for="pdfDateFilter" class="export-label">???????????</label>
-      <input type="text" id="pdfDateFilter" class="export-input" placeholder="???????????????????????" aria-label="Select date for PDF" />
+      <label for="pdfDateFilter" class="export-label">เลือกวันที่</label>
+      <input type="text" id="pdfDateFilter" class="export-input" placeholder="เช่น 10/03/2026" aria-label="Select date for PDF" />
       <div class="export-clear-wrap">
-        <button type="button" class="export-clear" onclick="clearExportDateFilter()">??????????</button>
+        <button type="button" class="export-clear" onclick="clearExportDateFilter()">ล้างวันที่</button>
       </div>
     </div>
 
     <div class="export-actions">
-      <button type="button" class="btn btn-outline btn-grow" onclick="closeExportModal()">??????</button>
-      <button type="button" class="btn btn-primary btn-grow" onclick="confirmExportPDF()">??????</button>
+      <button type="button" class="btn btn-outline btn-grow" onclick="closeExportModal()">ยกเลิก</button>
+      <button type="button" class="btn btn-primary btn-grow" onclick="confirmExportPDF()">ยืนยัน</button>
     </div>
   </div>
 </div>
@@ -507,7 +507,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/plugin/customParseFormat.min.js"></script>
 <script>
-  // ?????????? Plugin customParseFormat ??????????????????????????????
+  // ใช้ Plugin customParseFormat เพื่อแปลงวันที่หลายรูปแบบ
   dayjs.extend(window.dayjs_plugin_customParseFormat);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -522,12 +522,12 @@
 <div id="pwaInstallBanner" aria-live="polite" aria-atomic="true">
   <div class="pwa-icon">APP</div>
   <div class="pwa-body">
-    <div class="pwa-title">??????????????</div>
-    <div class="pwa-desc">????????????????????????????????????????</div>
+    <div class="pwa-title">ติดตั้งแอปบนอุปกรณ์</div>
+    <div class="pwa-desc">เข้าใช้งานได้รวดเร็วแบบออฟไลน์ พร้อมการแจ้งเตือน</div>
   </div>
   <div class="pwa-actions">
-    <button id="pwaInstallBtn" class="pwa-install">???????</button>
-    <button id="pwaDismissBtn" class="pwa-dismiss">???????</button>
+    <button id="pwaInstallBtn" class="pwa-install">ติดตั้ง</button>
+    <button id="pwaDismissBtn" class="pwa-dismiss">ไว้ภายหลัง</button>
   </div>
 </div>
 
@@ -544,7 +544,7 @@ if ('serviceWorker' in navigator) {
 // --- PWA: Install Prompt ---------------------------------------------------
 (function () {
   const DISMISS_KEY = 'pwa-install-dismissed';
-  const INSTALLED_KEY = 'pwa-installed-flag'; // ?????????????????????????????????
+  const INSTALLED_KEY = 'pwa-installed-flag'; // บันทึกสถานะว่าติดตั้งแล้ว
   let deferredPrompt = null;
   const banner = document.getElementById('pwaInstallBanner');
   const installBtn = document.getElementById('pwaInstallBtn');
@@ -573,12 +573,12 @@ if ('serviceWorker' in navigator) {
 
   // Capture the install prompt event (Chrome/Edge/Android)
   window.addEventListener('beforeinstallprompt', e => {
-    // 1. ????????????????? App ??????????????? (Standalone mode)
+    // 1. หากติดตั้งเป็น App แล้ว (Standalone mode) ไม่ต้องแสดง
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
       return; 
     }
 
-    // 2. ????????????????????????????????????? Flag ?????????
+    // บันทึกสถานะว่าเคยติดตั้งแล้ว
     if (localStorage.getItem(INSTALLED_KEY) === 'true') {
       return;
     }
@@ -603,7 +603,7 @@ if ('serviceWorker' in navigator) {
       const { outcome } = await deferredPrompt.userChoice;
       console.log('[PWA] Install outcome:', outcome);
 
-      // ??????????????????????????? ??????????????????????????
+      // à¸šà¸±à¸™à¸—à¸¶à¸à¸à¸²à¸£à¸•à¸´à¸”à¸•à¸±à¹‰à¸‡à¸«à¸²à¸à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸à¸”à¸¢à¸­à¸¡à¸£à¸±à¸š
       if (outcome === 'accepted') {
         localStorage.setItem(INSTALLED_KEY, 'true');
       }
@@ -623,7 +623,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('appinstalled', () => {
     hideBanner();
     deferredPrompt = null;
-    // ??????????????????????? ?????????????????????????????????
+    // à¸šà¸±à¸™à¸—à¸¶à¸à¸ªà¸–à¸²à¸™à¸°à¸§à¹ˆà¸²à¹à¸­à¸›à¸–à¸¹à¸à¸•à¸´à¸”à¸•à¸±à¹‰à¸‡à¹à¸¥à¹‰à¸§
     localStorage.setItem(INSTALLED_KEY, 'true');
     console.log('[PWA] App installed!');
   });
