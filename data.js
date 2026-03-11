@@ -92,3 +92,47 @@ function parseTimestamp(value) {
     const fallbackDate = new Date(raw);
     return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
   }
+
+  // data.js — Optimized Data Handling
+
+// ฟังก์ชันช่วยทำความสะอาดข้อมูลตัวเลข
+function cleanNum(val, fallback = 0) {
+  const n = parseFloat(val);
+  return isNaN(n) ? fallback : n;
+}
+
+function normaliseRows(rows) {
+  if (!rows || !rows.length) return rows;
+
+  const sample = rows[0];
+  const keyMap = {};
+
+  Object.keys(sample).forEach(origKey => {
+    const trimmed = origKey.trim();
+    const lc = trimmed.toLowerCase();
+    
+    // ค้นหา Column ที่ตรงกับชุดข้อมูลที่ต้องการ
+    let matchedKey = trimmed;
+    for (const [canonical, aliases] of Object.entries(COL_MAP)) {
+      if (canonical === trimmed || aliases.includes(lc)) {
+        matchedKey = canonical;
+        break;
+      }
+    }
+    keyMap[origKey] = matchedKey;
+  });
+
+  return rows.map(row => {
+    const out = {};
+    Object.entries(row).forEach(([k, v]) => {
+      const newKey = keyMap[k];
+      // ถ้าเป็นค่าตัวเลข ให้ทำการ Clean ข้อมูลก่อน
+      if (['PM2.5', 'PM10', 'Temperature', 'Humidity'].includes(newKey)) {
+        out[newKey] = cleanNum(v);
+      } else {
+        out[newKey] = v;
+      }
+    });
+    return out;
+  });
+}

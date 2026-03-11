@@ -199,49 +199,49 @@
     renderTablePage();
   }
 
-  function renderTablePage() {
-    const tbody = document.getElementById('tableBody');
-    if (!currentViewData.length) {
-      tbody.innerHTML = '<tr><td colspan="5"><div class="loading-overlay">No records</div></td></tr>';
-      document.getElementById('pageInfo').textContent = 'หน้า 1 / 1';
-      document.getElementById('btnPrevPage').disabled = true;
-      document.getElementById('btnNextPage').disabled = true;
-      return;
-    }
+  // script.js — Optimized Rendering logic
 
-    const totalPages = Math.ceil(currentViewData.length / TABLE_ROWS_PER_PAGE) || 1;
-    if (currentPage < 1) currentPage = 1;
-    if (currentPage > totalPages) currentPage = totalPages;
-
-    const start = (currentPage - 1) * TABLE_ROWS_PER_PAGE;
-    const end = start + TABLE_ROWS_PER_PAGE;
-    const pageRows = currentViewData.slice(start, end);
-
-    const parts = [];
-    for (let i = 0, len = pageRows.length; i < len; i++) {
-      const r = pageRows[i];
-      parts.push(
-        '<tr><td class="ts">'   + escapeHTML(fmtTs(r['Timestamp'] || '')) +
-        '</td><td class="pm25v">' + escapeHTML((parseFloat(r['PM2.5'])      || 0).toFixed(1)) +
-        '</td><td class="pm10v">' + escapeHTML((parseFloat(r['PM10'])        || 0).toFixed(1)) +
-        '</td><td class="tempv">' + escapeHTML((parseFloat(r['Temperature']) || 0).toFixed(1)) +
-        '</td><td class="humv">'  + escapeHTML((parseFloat(r['Humidity'])    || 0).toFixed(1)) +
-        '</td></tr>'
-      );
-    }
-    tbody.innerHTML = parts.join('');
-
-    // อัปเดตสถานะปุ่มหน้าถัดไป/ย้อนกลับ
-    document.getElementById('pageInfo').textContent = `หน้า ${currentPage} / ${totalPages}`;
-    document.getElementById('btnPrevPage').disabled = (currentPage === 1);
-    document.getElementById('btnNextPage').disabled = (currentPage === totalPages);
-
-    const rowsDOM = tbody.querySelectorAll('tr');
-    const cap = Math.min(rowsDOM.length, 20);
-    for (let i = 0; i < cap; i++) {
-      rowsDOM[i].style.animationDelay = (i * 18) + 'ms';
-    }
+function renderTablePage() {
+  const tbody = document.getElementById('tableBody');
+  if (!currentViewData.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="loading-overlay">No records</div></td></tr>';
+    updatePaginationUI(1, 1);
+    return;
   }
+
+  const totalPages = Math.ceil(currentViewData.length / TABLE_ROWS_PER_PAGE) || 1;
+  const start = (currentPage - 1) * TABLE_ROWS_PER_PAGE;
+  const end = start + TABLE_ROWS_PER_PAGE;
+  const pageRows = currentViewData.slice(start, end);
+
+  // ใช้ DocumentFragment เพื่อความเร็วสูงสุดในการวาด DOM
+  const fragment = document.createDocumentFragment();
+  
+  pageRows.forEach(r => {
+    const tr = document.createElement('tr');
+    
+    // สร้าง Cell แบบเจาะจงเพื่อลดการทำ HTML Parsing
+    tr.innerHTML = `
+      <td class="ts">${escapeHTML(fmtTs(r['Timestamp']))}</td>
+      <td class="pm25v">${r['PM2.5'].toFixed(1)}</td>
+      <td class="pm10v">${r['PM10'].toFixed(1)}</td>
+      <td class="tempv">${r['Temperature'].toFixed(1)}</td>
+      <td class="humv">${r['Humidity'].toFixed(1)}</td>
+    `;
+    fragment.appendChild(tr);
+  });
+
+  // ล้างค่าเก่าและใส่ Fragment ใหม่ทีเดียว (ลด Reflow)
+  tbody.replaceChildren(fragment);
+
+  updatePaginationUI(currentPage, totalPages);
+}
+
+function updatePaginationUI(page, total) {
+  document.getElementById('pageInfo').textContent = `หน้า ${page} / ${total}`;
+  document.getElementById('btnPrevPage').disabled = (page === 1);
+  document.getElementById('btnNextPage').disabled = (page === total);
+}
 
   function changePage(dir) {
     currentPage += dir;

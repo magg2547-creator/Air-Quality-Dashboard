@@ -1421,4 +1421,30 @@ html, body {
   .table-scroll { width: 100% !important; overflow-x: auto !important; }
 }
 
+/* เพิ่มส่วนนี้ลงใน style.css เพื่อ Performance */
+
+/* ลด Layout Shift ของกราฟ */
+.chart-container {
+  position: relative;
+  height: 190px;
+  aspect-ratio: 16 / 9; /* ช่วยให้ Browser จองพื้นที่ไว้ก่อนกราฟโหลดเสร็จ */
+}
+
+/* Optimize การ Render ตารางที่มีข้อมูลเยอะ */
+.table-scroll {
+  content-visibility: auto; /* วาดเฉพาะส่วนที่มองเห็น */
+  contain-intrinsic-size: 1px 500px; /* จองพื้นที่หลอกไว้ให้ Browser */
+}
+
+/* ปรับปรุง Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ป้องกันการเลือกข้อความบนปุ่มที่กดซ้ำๆ */
+.btn, .logo-icon {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 #exportModal.open { display: flex; }

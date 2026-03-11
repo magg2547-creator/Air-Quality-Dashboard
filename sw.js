@@ -1,9 +1,5 @@
-// sw.js — Service Worker for Air Quality PWA
-
-// ⚠️  เปลี่ยน BUILD_VERSION ทุกครั้งที่ deploy โค้ดใหม่
-//     เพื่อบังคับให้ browser ลบ cache เก่าและโหลดไฟล์ล่าสุด
-//     แนะนำใช้ date+time เช่น '20260311-1' หรือ git commit hash
-const BUILD_VERSION = '20260311-2'; // 🌟 เปลี่ยนเลขท้ายตรงนี้
+// sw.js — Optimized Service Worker
+const BUILD_VERSION = '20260311-OPTIMIZED'; 
 const CACHE_NAME = `aqm-v${BUILD_VERSION}`;
 const STATIC_ASSETS = [
   './',
@@ -15,7 +11,6 @@ const STATIC_ASSETS = [
   './manifest.json',
 ];
 
-// Install: cache static assets
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -23,7 +18,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -32,42 +26,26 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: network-first for API calls, cache-first for static assets
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Always network-first for Google Apps Script API calls
+  // 1. API Calls: Network Only (ต้องการข้อมูลสดใหม่เสมอ)
   if (url.hostname.includes('script.google.com') || url.hostname.includes('googleapis.com')) {
     event.respondWith(fetch(event.request).catch(() => new Response('', { status: 503 })));
     return;
   }
 
-  // Network-first for CDN resources (Chart.js, fonts, etc.)
-  if (!url.pathname.match(/\.(html|css|js|json)$/) || url.hostname !== location.hostname) {
-    event.respondWith(
-      fetch(event.request)
-        .then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-          }
-          return res;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // Cache-first for local static assets
+  // 2. Local Assets: Stale-While-Revalidate (เร็วที่สุด)
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-        }
-        return res;
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(event.request).then(cachedResponse => {
+        const fetchPromise = fetch(event.request).then(networkResponse => {
+          if (networkResponse.ok) {
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        });
+        return cachedResponse || fetchPromise;
       });
     })
   );
