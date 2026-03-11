@@ -1,4 +1,4 @@
-﻿// export.js -- PDF export module
+// export.js -- PDF export module
 (function (global) {
   let pdfDatePicker = null;
   let lastFocusedElement = null;
@@ -12,6 +12,29 @@
     normalizeFilterDate = opts && opts.normalizeFilterDate ? opts.normalizeFilterDate : null;
     getDateCache = opts && opts.getDateCache ? opts.getDateCache : null;
     getRows = opts && opts.getRows ? opts.getRows : null;
+  }
+  function formatForPicker(value) {
+    if (!value) return '';
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return value;
+    const normalized = normalizeFilterDate ? normalizeFilterDate(value) : value;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+      const parts = normalized.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    if (global.dayjs) {
+      const parsed = dayjs(value);
+      if (parsed.isValid()) return parsed.format('DD/MM/YYYY');
+    }
+    return value;
+  }
+
+  function clearDateFilter() {
+    const input = document.getElementById('pdfDateFilter');
+    if (pdfDatePicker) {
+      pdfDatePicker.clear();
+    } else if (input) {
+      input.value = '';
+    }
   }
 
   function getFocusable(modal) {
@@ -52,10 +75,11 @@
     }
 
     const currentTableFilter = document.getElementById('dateFilter').value;
+    const formatted = formatForPicker(currentTableFilter);
     if (pdfDatePicker) {
-      pdfDatePicker.setDate(currentTableFilter);
+      pdfDatePicker.setDate(formatted, false, 'd/m/Y');
     } else {
-      document.getElementById('pdfDateFilter').value = currentTableFilter;
+      document.getElementById('pdfDateFilter').value = formatted;
     }
 
     const focusables = getFocusable(modal);
@@ -84,7 +108,7 @@
     }
   }
 
-  function confirmExport() {
+  function confirmExportPDF() {
     closeModal();
 
     const allData = getRows ? getRows() : [];
@@ -187,6 +211,7 @@
     init,
     openModal,
     closeModal,
-    confirmExport
+    clearDateFilter,
+    confirmExportPDF
   };
 })(window);

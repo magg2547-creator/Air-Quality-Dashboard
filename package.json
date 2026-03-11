@@ -1,0 +1,12 @@
+{
+  "name": "air-quality-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Air Quality Dashboard",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "script"
+  },
+  "globals": {
+    "Chart": "readonly",
+    "QRCode": "readonly",
+    "dayjs": "readonly",
+    "html2pdf": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": "error",
+    "no-undef": "error",
+    "no-console": "warn"
+  }
+}

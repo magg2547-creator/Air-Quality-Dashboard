@@ -1,4 +1,6 @@
-﻿// charts.js â€” Chart.js and gauge initialization
+/* exported initCharts, updateCharts, initGauge, updateGaugePm25, updateGaugePm10 */
+/* global parseTimestamp */
+// charts.js — Chart.js and gauge initialization
 
 
 const hasChartLib = !!window.Chart;
@@ -8,6 +10,20 @@ if (hasChartLib) {
   Chart.defaults.font.family = "'DM Sans', sans-serif";
 }
 const charts = {};
+
+function debugLog() {
+  if (window.AppState && window.AppState.debug && window.console && typeof window.console.log === 'function') {
+    window.console.log.apply(window.console, arguments);
+  }
+}
+
+
+function tryToast(message) {
+  if (typeof window.showToast === 'function') {
+    window.tryToast(message);
+  }
+}
+
 // GAUGE_LEN = circumference of the SVG arc (radius = 85px, as defined in index.html)
 const GAUGE_LEN = Math.PI * 85;
 
@@ -96,7 +112,7 @@ function initCharts() {
         fallback.textContent = 'Charts are unavailable because Chart.js failed to load.';
         canvas.parentElement.appendChild(fallback);
       });
-      showToast('Chart.js failed to load. Dashboard data will still work without charts.');
+      tryToast('Chart.js failed to load. Dashboard data will still work without charts.');
       return;
     }
 
@@ -206,51 +222,59 @@ function initCharts() {
 
 function updateCharts(rows) {
     const status = document.getElementById('chartStatus');
-    if (status) {
-      status.textContent = '';
-      status.classList.remove('warn');
-    }
-    if (!hasChartLib || !charts.pm25 || !charts.pm10 || !charts.tempHum) return;
-    const slice = rows || [];
+    try {
+      if (status) {
+        status.textContent = '';
+        status.classList.remove('warn');
+      }
+      if (!hasChartLib || !charts.pm25 || !charts.pm10 || !charts.tempHum) return;
+      const slice = rows || [];
 
-    const labels   = [];
-    const pm25Data = [];
-    const pm10Data = [];
-    const tempData = [];
-    const humData  = [];
+      const labels   = [];
+      const pm25Data = [];
+      const pm10Data = [];
+      const tempData = [];
+      const humData  = [];
 
-    for (let i = 0; i < slice.length; i++) {
-      const r = slice[i];
-      const d = parseTimestamp(r.Timestamp);
+      for (let i = 0; i < slice.length; i++) {
+        const r = slice[i];
+        const d = parseTimestamp(r.Timestamp);
 
-      if (d) {
-        const day   = d.getDate();
-        const month = d.getMonth() + 1;
-        const hour  = String(d.getHours()).padStart(2, '0');
-        const mins  = String(d.getMinutes()).padStart(2, '0');
-        labels.push(`${day}/${month} ${hour}:${mins}`);
-      } else {
-        labels.push(r.Timestamp || '');
+        if (d) {
+          const day   = d.getDate();
+          const month = d.getMonth() + 1;
+          const hour  = String(d.getHours()).padStart(2, '0');
+          const mins  = String(d.getMinutes()).padStart(2, '0');
+          labels.push(`${day}/${month} ${hour}:${mins}`);
+        } else {
+          labels.push(r.Timestamp || '');
+        }
+
+        pm25Data.push(+r['PM2.5']             || 0);
+        pm10Data.push(+r['PM10']              || 0);
+        tempData.push(parseFloat(r['Temperature']) || 0);
+        humData.push(parseFloat(r['Humidity'])    || 0);
       }
 
-      pm25Data.push(+r['PM2.5']             || 0);
-      pm10Data.push(+r['PM10']              || 0);
-      tempData.push(parseFloat(r['Temperature']) || 0);
-      humData.push(parseFloat(r['Humidity'])    || 0);
+      charts.pm25.data.labels              = labels;
+      charts.pm25.data.datasets[0].data    = pm25Data;
+      charts.pm25.update('none');
+
+      charts.pm10.data.labels              = labels;
+      charts.pm10.data.datasets[0].data    = pm10Data;
+      charts.pm10.update('none');
+
+      charts.tempHum.data.labels           = labels;
+      charts.tempHum.data.datasets[0].data = tempData;
+      charts.tempHum.data.datasets[1].data = humData;
+      charts.tempHum.update('none');
+    } catch (err) {
+      debugLog('[AQM] updateCharts failed:', err);
+      if (status) {
+        status.textContent = 'Charts temporarily unavailable.';
+        status.classList.add('warn');
+      }
     }
-
-    charts.pm25.data.labels              = labels;
-    charts.pm25.data.datasets[0].data    = pm25Data;
-    charts.pm25.update('none');
-
-    charts.pm10.data.labels              = labels;
-    charts.pm10.data.datasets[0].data    = pm10Data;
-    charts.pm10.update('none');
-
-    charts.tempHum.data.labels           = labels;
-    charts.tempHum.data.datasets[0].data = tempData;
-    charts.tempHum.data.datasets[1].data = humData;
-    charts.tempHum.update('none');
   }
 
 
@@ -267,7 +291,7 @@ function initGauge() {
 
 /**
  * updateGauge(gaugeId, numId, value, maxVal)
- * Generic gauge updater â€” eliminates duplicated code between PM2.5 and PM10 gauges.
+ * Generic gauge updater — eliminates duplicated code between PM2.5 and PM10 gauges.
  *   gaugeId : id of the <path> fill element   (e.g. 'gaugeFill', 'gaugeFill10')
  *   numId   : id of the numeric label element  (e.g. 'gaugeNum',  'gaugeNum10')
  *   value   : current reading
