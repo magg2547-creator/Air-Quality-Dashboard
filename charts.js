@@ -211,7 +211,7 @@ function updateCharts(rows) {
       status.classList.remove('warn');
     }
     if (!hasChartLib || !charts.pm25 || !charts.pm10 || !charts.tempHum) return;
-    const slice = rows.slice(-30);
+    const slice = rows || [];
 
     const labels   = [];
     const pm25Data = [];
@@ -286,6 +286,7 @@ function updateGauge(gaugeId, numId, value, maxVal) {
 // Convenience wrappers used by script.js (keep original call-sites unchanged)
 function updateGaugePm25(value)  { updateGauge('gaugeFill',   'gaugeNum',   value, 150); }
 function updateGaugePm10(value)  { updateGauge('gaugeFill10', 'gaugeNum10', value, 300); }
+
 
 
 

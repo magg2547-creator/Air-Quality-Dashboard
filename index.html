@@ -275,7 +275,12 @@
     <h2 class="section-title" id="trend-analysis-title">Trend Analysis</h2>
     <div id="chartStatus" class="section-note" aria-live="polite"></div>
   </div>
-  <div class="charts-grid">
+  <div class="chart-range" role="group" aria-label="Chart range">
+    <button type="button" class="chart-range-btn" data-range="7">7D</button>
+    <button type="button" class="chart-range-btn active" data-range="30">30D</button>
+    <button type="button" class="chart-range-btn" data-range="90">90D</button>
+    <button type="button" class="chart-range-btn" data-range="all">All</button>
+  </div>  <div class="charts-grid">
     <div class="chart-card">
       <div class="chart-card-title">
         <span class="dot dot-pm25"></span>
@@ -471,14 +476,14 @@
     <button type="button" class="qr-close" onclick="closeQR()">Close</button>
   </div>
 </div>
-<div id="exportModal" role="dialog" aria-modal="true" aria-hidden="true" onclick="if(event.target===this) closeExportModal()">
+<div id="exportModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="exportModalTitle" aria-describedby="exportModalDesc" onclick="if(event.target===this) closeExportModal()">
 
   <div class="qr-card export-card">
-    <div class="qr-title export-title">
+    <div class="qr-title export-title" id="exportModalTitle">
       <span class="export-icon">??</span>
       Export PDF Report
     </div>
-    <p class="export-desc">
+    <p class="export-desc" id="exportModalDesc">
       ???????????????????????????????????? ??????????????????????????????????????????
     </p>
 
@@ -512,6 +517,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="data.js"></script>
 <script src="charts.js"></script>
+<script src="notifications.js"></script>
+<script src="export.js"></script>
 <script src="script.js"></script>
 <!-- PWA Install Banner -->
 <div id="pwaInstallBanner" aria-live="polite" aria-atomic="true">
@@ -627,4 +634,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
+
+
 

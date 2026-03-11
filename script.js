@@ -10,6 +10,7 @@
   let countdown = currentRefreshSecs;
   let isLoading = false;
   let isPaused = false;
+  let chartRange = 30;
   
   // à¸ªà¸–à¸²à¸™à¸° Pagination
   let currentPage = 1;
@@ -40,6 +41,7 @@
   function renderDashboard(rows) {
     if (!rows || rows.length === 0) {
       showToast('No data found in the spreadsheet.');
+      setLoadingState(false);
       return;
     }
 
@@ -52,7 +54,9 @@
     const last = rows[n - 1];
     const prev = n > 1 ? rows[n - 2] : null;
 
-    checkAirQualityAlert(last);
+    if (global.AQMNotifications && typeof global.AQMNotifications.checkAlert === 'function') {
+      global.AQMNotifications.checkAlert(last);
+    }
 
     const pm25 = parseFloat(last['PM2.5'])       || 0;
     const pm10 = parseFloat(last['PM10'])        || 0;
@@ -85,7 +89,7 @@
 
     updateGaugePm25(pm25);
     updateGaugePm10(pm10);
-    updateCharts(rows);
+    updateChartsWithRange(rows);
 
     // Analytics: single pass (was 2 separate loops before)
     let pm25Sum = 0, pm25Min = Infinity, pm25Max = -Infinity;
@@ -128,6 +132,7 @@
       isAiFetched = true;
     }
 
+    setLoadingState(false);
     resetCountdown();
   }
 
@@ -330,9 +335,10 @@ function updatePaginationUI(page, total) {
   =================================================== */
   function loadData() {
     const url = document.getElementById('sheetsUrl').value.trim();
-    if (!url) { showToast('Please enter an Apps Script URL.'); return; }
+    if (!url) { showToast('Please enter an Apps Script URL.'); setLoadingState(false); return; }
 
     isLoading = true;
+    setLoadingState(true);
     showToast('Loading data...');
     setText('sysConn', 'Loading...');
     updateHeaderMeta('Refreshing now...', 'Checking data source...', allData.length ? allData.length + ' cached rows' : 'Preparing dataset');
@@ -352,7 +358,7 @@ function updatePaginationUI(page, total) {
 
     const timer = setTimeout(() => {
       if (done) return;
-      done = true; isLoading = false;
+      done = true; isLoading = false; setLoadingState(false);
       topBarError();
       splashProgress(100, 'Timeout');
       setTimeout(() => document.getElementById('splash').classList.add('hide'), 800);
@@ -404,7 +410,7 @@ function updatePaginationUI(page, total) {
       delete global[cbName];
       const s = document.getElementById('__aqmScript');
       if (s) s.remove();
-      isLoading = false; topBarError();
+      isLoading = false; setLoadingState(false); topBarError();
       splashProgress(100, 'Connection failed');
       setTimeout(() => document.getElementById('splash').classList.add('hide'), 800);
       showToast(msg);
@@ -442,106 +448,9 @@ function updatePaginationUI(page, total) {
      EXPORT / CSV
   =================================================== */
   function confirmExportPDF() {
-    closeExportModal(); // à¸›à¸´à¸”à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡ Popup à¸à¹ˆà¸­à¸™
-
-    if (!allData.length) {
-      showToast('No data yet - click Reload Data first.');
-      return;
+    if (global.AQMExport && typeof global.AQMExport.confirmExport === 'function') {
+      global.AQMExport.confirmExport();
     }
-
-    // 1. à¸”à¸¶à¸‡à¸„à¹ˆà¸²à¸ˆà¸²à¸à¸Šà¹ˆà¸­à¸‡à¸„à¹‰à¸™à¸«à¸²à¸§à¸±à¸™à¸—à¸µà¹ˆà¹ƒà¸™à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡ Popup
-    const filterInput = document.getElementById('pdfDateFilter').value;
-    const filterVal = normalizeFilterDate(filterInput);
-    
-    // 2. à¸à¸£à¸­à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸—à¸µà¹ˆà¸ˆà¸°à¸™à¸³à¹„à¸› Export
-    let rowsToExport = allData;
-    if (filterVal) {
-      const cache = getDateCache();
-      rowsToExport = allData.filter((_, i) => cache[i] === filterVal);
-    }
-
-    if (!rowsToExport.length) {
-      showToast('No records found for the selected date.');
-      return;
-    }
-    
-    showToast('Generating PDF... Please wait.');
-
-    const now = dayjs().format('D MMMM YYYY, HH:mm');
-    const rows = [...rowsToExport].reverse(); 
-
-    // 3. à¸›à¸£à¸±à¸šà¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸«à¸±à¸§à¹€à¸£à¸·à¹ˆà¸­à¸‡à¹ƒà¸«à¹‰à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸šà¸à¸²à¸£à¸„à¹‰à¸™à¸«à¸²
-    const reportTitleText = filterInput ? `Daily Data Report: ${filterInput}` : 'Historical Data Report';
-
-    const container = document.createElement('div');
-    container.style.padding = '20px';
-    container.style.fontFamily = "'DM Sans', sans-serif";
-    container.style.color = '#0f172a';
-
-    const reportHeader = `
-      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #0284c7;">
-        <div>
-          <h1 style="font-size: 18px; font-weight: 700; margin: 0;">${reportTitleText}</h1>
-          <p style="font-size: 12px; color: #64748b; margin: 4px 0 0 0;">Air Quality Monitoring System</p>
-        </div>
-      </div>
-      <div style="display: flex; gap: 24px; margin-bottom: 18px; font-size: 11px; color: #64748b;">
-        <span>Export: ${now}</span>
-        <span>Total: ${rows.length} records</span>
-      </div>
-    `;
-
-    const rowsPerPage = 25; 
-    let tablesHtml = '';
-
-    for (let i = 0; i < rows.length; i += rowsPerPage) {
-      const chunk = rows.slice(i, i + rowsPerPage);
-      
-      const rowsHtml = chunk.map((r, index) => `
-        <tr style="background: ${(i + index) % 2 === 0 ? '#ffffff' : '#f8fafc'}; page-break-inside: avoid;">
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">${escapeHTML(fmtTs(r['Timestamp']))}</td>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; font-size: 11px;">${(+r['PM2.5'] || 0).toFixed(1)}</td>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; font-size: 11px;">${(+r['PM10']  || 0).toFixed(1)}</td>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; font-size: 11px;">${(parseFloat(r['Temperature']) || 0).toFixed(1)}</td>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; font-size: 11px;">${(parseFloat(r['Humidity'])    || 0).toFixed(1)}</td>
-        </tr>`).join('');
-
-      const pageBreak = i > 0 ? '<div style="page-break-before: always; margin-top: 20px;"></div>' : '';
-
-      tablesHtml += `
-        ${pageBreak}
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-          <thead>
-            <tr style="background: #0284c7; color: #fff;">
-              <th style="padding: 10px 12px; font-size: 10px; text-transform: uppercase;">Timestamp</th>
-              <th style="padding: 10px 12px; font-size: 10px; text-transform: uppercase; text-align: right;">PM2.5</th>
-              <th style="padding: 10px 12px; font-size: 10px; text-transform: uppercase; text-align: right;">PM10</th>
-              <th style="padding: 10px 12px; font-size: 10px; text-transform: uppercase; text-align: right;">Temp (&deg;C)</th>
-              <th style="padding: 10px 12px; font-size: 10px; text-transform: uppercase; text-align: right;">Humidity (%)</th>
-            </tr>
-          </thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-      `;
-    }
-
-    container.innerHTML = reportHeader + tablesHtml;
-
-    const opt = {
-      margin:       10,
-      filename:     filterInput ? `AirQuality_${filterInput.replace(/\//g, '-')}.pdf` : `AirQuality_All_${dayjs().format('YYYYMMDD_HHmm')}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['css', 'legacy'] }
-    };
-
-    html2pdf().set(opt).from(container).save().then(() => {
-      showToast('PDF downloaded successfully.');
-    }).catch(err => {
-      showToast('Error generating PDF.');
-      console.error(err);
-    });
   }
 
   function downloadCSV() {
@@ -585,7 +494,8 @@ function updatePaginationUI(page, total) {
     } else {
       isPaused = false;
       currentRefreshSecs = v;
-      resetCountdown();
+      setLoadingState(false);
+    resetCountdown();
     }
   }
 
@@ -616,62 +526,14 @@ function updatePaginationUI(page, total) {
   // à¸£à¸°à¸šà¸š Notification à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸à¸¸à¹ˆà¸™ (à¸­à¸±à¸›à¹€à¸”à¸•à¹ƒà¸«à¸¡à¹ˆà¹€à¸›à¹‡à¸™ Toggle)
   // ==========================================
   function toggleNotifications() {
-    const cb = document.getElementById('notifToggleCb');
-    
-    // à¸–à¹‰à¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸à¸” "à¹€à¸›à¸´à¸”"
-    if (cb.checked) {
-      if (!("Notification" in window)) {
-        showToast("à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œà¸™à¸µà¹‰à¹„à¸¡à¹ˆà¸£à¸­à¸‡à¸£à¸±à¸šà¸à¸²à¸£à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ (Notifications)");
-        cb.checked = false; // à¹€à¸”à¹‰à¸‡à¸ªà¸§à¸´à¸•à¸Šà¹Œà¸à¸¥à¸±à¸šà¹„à¸›à¸ªà¸µà¹à¸”à¸‡
-        return;
-      }
-      
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          notificationsEnabled = true;
-          showToast("ðŸŸ¢ à¹€à¸›à¸´à¸”à¸£à¸°à¸šà¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸ªà¸³à¹€à¸£à¹‡à¸ˆ!");
-        } else {
-          showToast("ðŸ”´ à¸„à¸¸à¸“à¸›à¸à¸´à¹€à¸ªà¸˜à¸à¸²à¸£à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ à¸à¸£à¸¸à¸“à¸²à¸­à¸™à¸¸à¸à¸²à¸•à¹ƒà¸™à¸à¸²à¸£à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸²à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ");
-          cb.checked = false; // à¹€à¸”à¹‰à¸‡à¸ªà¸§à¸´à¸•à¸Šà¹Œà¸à¸¥à¸±à¸šà¸–à¹‰à¸²à¹„à¸¡à¹ˆà¸­à¸™à¸¸à¸à¸²à¸•
-        }
-      });
-    } 
-    // à¸–à¹‰à¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸à¸” "à¸›à¸´à¸”"
-    else {
-      notificationsEnabled = false;
-      showToast("ðŸ”´ à¸›à¸´à¸”à¸£à¸°à¸šà¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¹à¸¥à¹‰à¸§");
+    if (global.AQMNotifications && typeof global.AQMNotifications.toggle === 'function') {
+      global.AQMNotifications.toggle();
     }
   }
 
   function checkAirQualityAlert(lastRow) {
-    if (!notificationsEnabled || !lastRow) return;
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') {
-      return;
-    }
-    
-    const pm25 = parseFloat(lastRow['PM2.5']) || 0;
-    const ts = lastRow['Timestamp'];
-
-    // à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¹€à¸¡à¸·à¹ˆà¸­à¸à¸¸à¹ˆà¸™à¹€à¸à¸´à¸™ 100 à¹à¸¥à¸°à¸•à¹‰à¸­à¸‡à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¹€à¸•à¸·à¸­à¸™à¹€à¸§à¸¥à¸²à¸™à¸µà¹‰
-    if (pm25 > 100 && ts !== lastAlertTimestamp) {
-      lastAlertTimestamp = ts;
-      
-      // à¸ªà¸£à¹‰à¸²à¸‡à¸à¸¥à¹ˆà¸­à¸‡à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™
-      const notification = new Notification("âš ï¸ à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸¡à¸¥à¸žà¸´à¸©à¸—à¸²à¸‡à¸­à¸²à¸à¸²à¸¨!", {
-        body: `à¸„à¹ˆà¸² PM2.5 à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¸žà¸¸à¹ˆà¸‡à¸ªà¸¹à¸‡à¸–à¸¶à¸‡ ${pm25.toFixed(1)} Âµg/mÂ³ (à¸£à¸°à¸”à¸±à¸šà¸­à¸±à¸™à¸•à¸£à¸²à¸¢) à¹‚à¸›à¸£à¸”à¸ªà¸§à¸¡à¸«à¸™à¹‰à¸²à¸à¸²à¸à¸­à¸™à¸²à¸¡à¸±à¸¢ N95`,
-        icon: 'https://cdn-icons-png.flaticon.com/512/3209/3209935.png'
-      });
-
-      // ðŸŒŸ 1. à¸ªà¸±à¹ˆà¸‡à¹ƒà¸«à¹‰à¸à¸¥à¹ˆà¸­à¸‡à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ "à¸›à¸´à¸”à¸•à¸±à¸§à¹€à¸­à¸‡à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´" à¸«à¸¥à¸±à¸‡à¸ˆà¸²à¸à¸œà¹ˆà¸²à¸™à¹„à¸› 7 à¸§à¸´à¸™à¸²à¸—à¸µ
-      setTimeout(() => {
-        notification.close();
-      }, 7000);
-
-      // ðŸŒŸ 2. à¸ªà¸±à¹ˆà¸‡à¹ƒà¸«à¹‰ "à¸›à¸´à¸”à¸—à¸±à¸™à¸—à¸µ" à¸–à¹‰à¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¹€à¸­à¸²à¹€à¸¡à¸²à¸ªà¹Œà¹„à¸›à¸„à¸¥à¸´à¸à¸—à¸µà¹ˆà¸à¸¥à¹ˆà¸­à¸‡à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™
-      notification.onclick = () => {
-        notification.close();
-      };
+    if (global.AQMNotifications && typeof global.AQMNotifications.checkAlert === 'function') {
+      global.AQMNotifications.checkAlert(lastRow);
     }
   }
 
@@ -765,6 +627,25 @@ function updatePaginationUI(page, total) {
   =================================================== */
   let _qrInstance = null;
   let lastFocusedElement = null;
+  let qrTrapHandler = null;
+  function getFocusable(modal) {
+    return modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  }
+
+  function trapFocus(modal, event) {
+    if (event.key !== 'Tab') return;
+    const focusables = getFocusable(modal);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
 
   const STORAGE_KEY   = 'aqm-script-url';
   const DASHBOARD_URL = global.location.href;
@@ -846,6 +727,10 @@ function updatePaginationUI(page, total) {
     const modal = document.getElementById('qrModal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    if (qrTrapHandler) {
+      modal.removeEventListener('keydown', qrTrapHandler);
+      qrTrapHandler = null;
+    }
     document.body.style.overflow = '';
     _qrInstance = null;
     if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
@@ -857,43 +742,17 @@ function updatePaginationUI(page, total) {
   /* ===================================================
      EXPORT PDF MODAL
   =================================================== */
-  let pdfDatePicker = null;
 
   function openExportModal() {
-    const modal = document.getElementById('exportModal');
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-
-    // ðŸŒŸ à¸¥à¹‡à¸­à¸„à¹„à¸¡à¹ˆà¹ƒà¸«à¹‰à¸«à¸™à¹‰à¸²à¸ˆà¸­à¸žà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸”à¹‰
-    document.body.style.overflow = 'hidden';
-
-    // à¹€à¸£à¸µà¸¢à¸à¹ƒà¸Šà¹‰ flatpickr à¸ªà¸³à¸«à¸£à¸±à¸šà¸Šà¹ˆà¸­à¸‡à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¸—à¸µà¹ˆà¹ƒà¸™ Modal
-    if (!pdfDatePicker && global.flatpickr) {
-      pdfDatePicker = global.flatpickr('#pdfDateFilter', {
-        dateFormat: 'd/m/Y',
-        locale: global.flatpickr.l10ns.th || 'default',
-        disableMobile: true,
-        allowInput: false,
-        clickOpens: true
-      });
-    }
-
-    // à¸‹à¸´à¸‡à¸„à¹Œà¸§à¸±à¸™à¸—à¸µà¹ˆà¸ˆà¸²à¸à¸•à¸²à¸£à¸²à¸‡à¸«à¸¥à¸±à¸à¸¡à¸²à¹ƒà¸ªà¹ˆà¹ƒà¸«à¹‰à¹€à¸›à¹‡à¸™à¸„à¹ˆà¸²à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™
-    const currentTableFilter = document.getElementById('dateFilter').value;
-    if (pdfDatePicker) {
-      pdfDatePicker.setDate(currentTableFilter);
-    } else {
-      document.getElementById('pdfDateFilter').value = currentTableFilter;
+    if (global.AQMExport && typeof global.AQMExport.openModal === 'function') {
+      global.AQMExport.openModal();
     }
   }
 
   function closeExportModal() {
-    const modal = document.getElementById('exportModal');
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-
-    // ðŸŒŸ à¸›à¸¥à¸”à¸¥à¹‡à¸­à¸„à¹ƒà¸«à¹‰à¸«à¸™à¹‰à¸²à¸ˆà¸­à¸žà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡à¸à¸¥à¸±à¸šà¸¡à¸²à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸”à¹‰à¸•à¸²à¸¡à¸›à¸à¸•à¸´
-    document.body.style.overflow = '';
+    if (global.AQMExport && typeof global.AQMExport.closeModal === 'function') {
+      global.AQMExport.closeModal();
+    }
   }
 
   // à¸›à¸´à¸” Modal à¹€à¸¡à¸·à¹ˆà¸­à¸à¸”à¸›à¸¸à¹ˆà¸¡ Escape (à¹ƒà¸ªà¹ˆà¹€à¸žà¸´à¹ˆà¸¡à¸•à¹ˆà¸­à¸ˆà¸²à¸ EventListener à¸‚à¸­à¸‡ QR Modal à¹„à¸”à¹‰à¹€à¸¥à¸¢)
@@ -910,6 +769,18 @@ function updatePaginationUI(page, total) {
     initCharts();
     initGauge();
     initDatePicker();
+    bindChartRangeControls();
+    if (global.AQMNotifications && typeof global.AQMNotifications.init === 'function') {
+      global.AQMNotifications.init({ showToast });
+    }
+    if (global.AQMExport && typeof global.AQMExport.init === 'function') {
+      global.AQMExport.init({
+        showToast,
+        normalizeFilterDate,
+        getDateCache,
+        getRows: () => allData
+      });
+    }
 
     splashProgress(30, 'Starting dashboard...');
     const savedUrl = global.localStorage.getItem(STORAGE_KEY);
@@ -1050,6 +921,21 @@ function updatePaginationUI(page, total) {
     bootstrap();
   }
 })(window);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
