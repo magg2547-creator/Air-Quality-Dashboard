@@ -44,6 +44,9 @@
     }
 
     allData = rows;
+    if (typeof AppState === 'object' && AppState) {
+      AppState.allData = rows;
+    }
     _dataCacheSource = null;  // invalidate date filter cache
     const n    = rows.length;
     const last = rows[n - 1];
@@ -635,6 +638,10 @@ function updatePaginationUI(page, total) {
 
   function checkAirQualityAlert(lastRow) {
     if (!notificationsEnabled || !lastRow) return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') {
+      return;
+    }
     
     const pm25 = parseFloat(lastRow['PM2.5']) || 0;
     const ts = lastRow['Timestamp'];
@@ -1036,3 +1043,4 @@ function updatePaginationUI(page, total) {
     bootstrap();
   }
 })(window);
+

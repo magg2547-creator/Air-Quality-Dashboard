@@ -24,41 +24,6 @@ const COL_MAP = {
   'Humidity':    ['humidity', 'humi', 'humid', 'rh']
 };
 
-function normaliseRows(rows) {
-    if (!rows || !rows.length) return rows;
-
-    const sample = rows[0];
-    const keyMap = {};
-
-    Object.keys(sample).forEach(origKey => {
-      const trimmed = origKey.trim();
-      const lc      = trimmed.toLowerCase();
-
-      if (COL_MAP[trimmed]) {
-        keyMap[origKey] = trimmed;
-        return;
-      }
-
-      let matched = false;
-      for (const [canonical, aliases] of Object.entries(COL_MAP)) {
-        if (aliases.includes(lc)) {
-          keyMap[origKey] = canonical;
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) keyMap[origKey] = trimmed;
-    });
-
-    return rows.map(row => {
-      const out = {};
-      Object.entries(row).forEach(([k, v]) => {
-        out[keyMap[k] || k] = v;
-      });
-      return out;
-    });
-  }
-
 function parseTimestamp(value) {
     if (value instanceof Date) {
       return Number.isNaN(value.getTime()) ? null : value;
@@ -136,3 +101,4 @@ function normaliseRows(rows) {
     return out;
   });
 }
+
