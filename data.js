@@ -1,6 +1,6 @@
-// data.js — State, data normalisation, timestamp parsing
+﻿// data.js â€” State, data normalisation, timestamp parsing
 
-// State — centralised into a single object to avoid scattered globals
+// State â€” centralised into a single object to avoid scattered globals
 const AppState = {
   allData:    [],
   sortCol:    0,
@@ -34,7 +34,7 @@ function parseTimestamp(value) {
 
     const raw = String(value).trim();
 
-    // กำหนดรูปแบบวันที่ที่มักจะมาจาก Google Sheets เพื่อให้ Day.js ช่วยแปลง
+    // à¸à¸³à¸«à¸™à¸”à¸£à¸¹à¸›à¹à¸šà¸šà¸§à¸±à¸™à¸—à¸µà¹ˆà¸—à¸µà¹ˆà¸¡à¸±à¸à¸ˆà¸°à¸¡à¸²à¸ˆà¸²à¸ Google Sheets à¹€à¸žà¸·à¹ˆà¸­à¹ƒà¸«à¹‰ Day.js à¸Šà¹ˆà¸§à¸¢à¹à¸›à¸¥à¸‡
     const formats = [
       'YYYY-MM-DDTHH:mm:ss.SSSZ', // ISO Format
       'YYYY-MM-DD HH:mm:ss',
@@ -45,22 +45,22 @@ function parseTimestamp(value) {
       'MM/DD/YYYY'
     ];
 
-    // ใช้ dayjs พร้อม plugin (ที่ดึงมาจาก index.html) ช่วยประมวลผล
-    // strict: true ป้องกัน false-positive เช่น "99/99/9999" ที่อาจผ่านได้โดยไม่ตั้งใจ
+    // à¹ƒà¸Šà¹‰ dayjs à¸žà¸£à¹‰à¸­à¸¡ plugin (à¸—à¸µà¹ˆà¸”à¸¶à¸‡à¸¡à¸²à¸ˆà¸²à¸ index.html) à¸Šà¹ˆà¸§à¸¢à¸›à¸£à¸°à¸¡à¸§à¸¥à¸œà¸¥
+    // strict: true à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ false-positive à¹€à¸Šà¹ˆà¸™ "99/99/9999" à¸—à¸µà¹ˆà¸­à¸²à¸ˆà¸œà¹ˆà¸²à¸™à¹„à¸”à¹‰à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸•à¸±à¹‰à¸‡à¹ƒà¸ˆ
     const parsed = dayjs(raw, formats, true); 
 
     if (parsed.isValid()) {
       return parsed.toDate();
     }
 
-    // กรณีที่เจอ Format แปลกๆ ให้ Fallback กลับไปใช้วิธีพื้นฐานของ JavaScript
+    // à¸à¸£à¸“à¸µà¸—à¸µà¹ˆà¹€à¸ˆà¸­ Format à¹à¸›à¸¥à¸à¹† à¹ƒà¸«à¹‰ Fallback à¸à¸¥à¸±à¸šà¹„à¸›à¹ƒà¸Šà¹‰à¸§à¸´à¸˜à¸µà¸žà¸·à¹‰à¸™à¸à¸²à¸™à¸‚à¸­à¸‡ JavaScript
     const fallbackDate = new Date(raw);
     return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
   }
 
-  // data.js — Optimized Data Handling
+  // data.js â€” Optimized Data Handling
 
-// ฟังก์ชันช่วยทำความสะอาดข้อมูลตัวเลข
+// à¸Ÿà¸±à¸‡à¸à¹Œà¸Šà¸±à¸™à¸Šà¹ˆà¸§à¸¢à¸—à¸³à¸„à¸§à¸²à¸¡à¸ªà¸°à¸­à¸²à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸•à¸±à¸§à¹€à¸¥à¸‚
 function cleanNum(val, fallback = 0) {
   const n = parseFloat(val);
   return isNaN(n) ? fallback : n;
@@ -76,7 +76,7 @@ function normaliseRows(rows) {
     const trimmed = origKey.trim();
     const lc = trimmed.toLowerCase();
     
-    // ค้นหา Column ที่ตรงกับชุดข้อมูลที่ต้องการ
+    // à¸„à¹‰à¸™à¸«à¸² Column à¸—à¸µà¹ˆà¸•à¸£à¸‡à¸à¸±à¸šà¸Šà¸¸à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£
     let matchedKey = trimmed;
     for (const [canonical, aliases] of Object.entries(COL_MAP)) {
       if (canonical === trimmed || aliases.includes(lc)) {
@@ -91,7 +91,7 @@ function normaliseRows(rows) {
     const out = {};
     Object.entries(row).forEach(([k, v]) => {
       const newKey = keyMap[k];
-      // ถ้าเป็นค่าตัวเลข ให้ทำการ Clean ข้อมูลก่อน
+      // à¸–à¹‰à¸²à¹€à¸›à¹‡à¸™à¸„à¹ˆà¸²à¸•à¸±à¸§à¹€à¸¥à¸‚ à¹ƒà¸«à¹‰à¸—à¸³à¸à¸²à¸£ Clean à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸à¹ˆà¸­à¸™
       if (['PM2.5', 'PM10', 'Temperature', 'Humidity'].includes(newKey)) {
         out[newKey] = cleanNum(v);
       } else {
@@ -101,4 +101,5 @@ function normaliseRows(rows) {
     return out;
   });
 }
+
 

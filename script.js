@@ -1,4 +1,4 @@
-// script.js — Main application logic (rendering, loading, filters, export, QR, bootstrap)
+﻿// script.js â€” Main application logic (rendering, loading, filters, export, QR, bootstrap)
 // Depends on: data.js, charts.js  (must be loaded first)
 (function (global) {
 
@@ -11,12 +11,12 @@
   let isLoading = false;
   let isPaused = false;
   
-  // สถานะ Pagination
+  // à¸ªà¸–à¸²à¸™à¸° Pagination
   let currentPage = 1;
   const TABLE_ROWS_PER_PAGE = 25;
-  let currentViewData = []; // เก็บข้อมูลที่ถูกฟิลเตอร์แล้วเพื่อเอามาแบ่งหน้า
+  let currentViewData = []; // à¹€à¸à¹‡à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸—à¸µà¹ˆà¸–à¸¹à¸à¸Ÿà¸´à¸¥à¹€à¸•à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¹€à¸žà¸·à¹ˆà¸­à¹€à¸­à¸²à¸¡à¸²à¹à¸šà¹ˆà¸‡à¸«à¸™à¹‰à¸²
 
-  // สถานะ Notification
+  // à¸ªà¸–à¸²à¸™à¸° Notification
   let notificationsEnabled = false;
   let lastAlertTimestamp = null;
 
@@ -195,6 +195,9 @@
       clickOpens: true,
       onChange: filterByDate
     });
+    if (typeof AppState === 'object' && AppState) {
+      AppState.datePicker = datePicker;
+    }
   }
   function renderTable(rows) {
     currentViewData = rows;
@@ -202,7 +205,7 @@
     renderTablePage();
   }
 
-  // script.js — Optimized Rendering logic
+  // script.js â€” Optimized Rendering logic
 
 function renderTablePage() {
   const tbody = document.getElementById('tableBody');
@@ -217,13 +220,13 @@ function renderTablePage() {
   const end = start + TABLE_ROWS_PER_PAGE;
   const pageRows = currentViewData.slice(start, end);
 
-  // ใช้ DocumentFragment เพื่อความเร็วสูงสุดในการวาด DOM
+  // à¹ƒà¸Šà¹‰ DocumentFragment à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¹€à¸£à¹‡à¸§à¸ªà¸¹à¸‡à¸ªà¸¸à¸”à¹ƒà¸™à¸à¸²à¸£à¸§à¸²à¸” DOM
   const fragment = document.createDocumentFragment();
   
   pageRows.forEach(r => {
     const tr = document.createElement('tr');
     
-    // สร้าง Cell แบบเจาะจงเพื่อลดการทำ HTML Parsing
+    // à¸ªà¸£à¹‰à¸²à¸‡ Cell à¹à¸šà¸šà¹€à¸ˆà¸²à¸°à¸ˆà¸‡à¹€à¸žà¸·à¹ˆà¸­à¸¥à¸”à¸à¸²à¸£à¸—à¸³ HTML Parsing
     tr.innerHTML = `
       <td class="ts">${escapeHTML(fmtTs(r['Timestamp']))}</td>
       <td class="pm25v">${r['PM2.5'].toFixed(1)}</td>
@@ -234,14 +237,14 @@ function renderTablePage() {
     fragment.appendChild(tr);
   });
 
-  // ล้างค่าเก่าและใส่ Fragment ใหม่ทีเดียว (ลด Reflow)
+  // à¸¥à¹‰à¸²à¸‡à¸„à¹ˆà¸²à¹€à¸à¹ˆà¸²à¹à¸¥à¸°à¹ƒà¸ªà¹ˆ Fragment à¹ƒà¸«à¸¡à¹ˆà¸—à¸µà¹€à¸”à¸µà¸¢à¸§ (à¸¥à¸” Reflow)
   tbody.replaceChildren(fragment);
 
   updatePaginationUI(currentPage, totalPages);
 }
 
 function updatePaginationUI(page, total) {
-  document.getElementById('pageInfo').textContent = `หน้า ${page} / ${total}`;
+  document.getElementById('pageInfo').textContent = `à¸«à¸™à¹‰à¸² ${page} / ${total}`;
   document.getElementById('btnPrevPage').disabled = (page === 1);
   document.getElementById('btnNextPage').disabled = (page === total);
 }
@@ -262,6 +265,10 @@ function updatePaginationUI(page, total) {
   function sortTable(col) {
     if (sortCol === col) sortAsc = !sortAsc;
     else { sortCol = col; sortAsc = true; }
+    if (typeof AppState === 'object' && AppState) {
+      AppState.sortCol = sortCol;
+      AppState.sortAsc = sortAsc;
+    }
 
     const keys = ['Timestamp', 'PM2.5', 'PM10', 'Temperature', 'Humidity'];
     const key  = keys[col];
@@ -435,18 +442,18 @@ function updatePaginationUI(page, total) {
      EXPORT / CSV
   =================================================== */
   function confirmExportPDF() {
-    closeExportModal(); // ปิดหน้าต่าง Popup ก่อน
+    closeExportModal(); // à¸›à¸´à¸”à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡ Popup à¸à¹ˆà¸­à¸™
 
     if (!allData.length) {
       showToast('No data yet - click Reload Data first.');
       return;
     }
 
-    // 1. ดึงค่าจากช่องค้นหาวันที่ในหน้าต่าง Popup
+    // 1. à¸”à¸¶à¸‡à¸„à¹ˆà¸²à¸ˆà¸²à¸à¸Šà¹ˆà¸­à¸‡à¸„à¹‰à¸™à¸«à¸²à¸§à¸±à¸™à¸—à¸µà¹ˆà¹ƒà¸™à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡ Popup
     const filterInput = document.getElementById('pdfDateFilter').value;
     const filterVal = normalizeFilterDate(filterInput);
     
-    // 2. กรองข้อมูลที่จะนำไป Export
+    // 2. à¸à¸£à¸­à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸—à¸µà¹ˆà¸ˆà¸°à¸™à¸³à¹„à¸› Export
     let rowsToExport = allData;
     if (filterVal) {
       const cache = getDateCache();
@@ -463,7 +470,7 @@ function updatePaginationUI(page, total) {
     const now = dayjs().format('D MMMM YYYY, HH:mm');
     const rows = [...rowsToExport].reverse(); 
 
-    // 3. ปรับเปลี่ยนข้อความหัวเรื่องให้สอดคล้องกับการค้นหา
+    // 3. à¸›à¸£à¸±à¸šà¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¸«à¸±à¸§à¹€à¸£à¸·à¹ˆà¸­à¸‡à¹ƒà¸«à¹‰à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸šà¸à¸²à¸£à¸„à¹‰à¸™à¸«à¸²
     const reportTitleText = filterInput ? `Daily Data Report: ${filterInput}` : 'Historical Data Report';
 
     const container = document.createElement('div');
@@ -590,7 +597,7 @@ function updatePaginationUI(page, total) {
     if (countdown === 0) {
       countdown = currentRefreshSecs;
       if (document.getElementById('sheetsUrl').value.trim()) {
-        loadData(); // โหลดข้อมูลใหม่เมื่อหมดเวลา
+        loadData(); // à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹ƒà¸«à¸¡à¹ˆà¹€à¸¡à¸·à¹ˆà¸­à¸«à¸¡à¸”à¹€à¸§à¸¥à¸²
       }
     }
 
@@ -603,36 +610,36 @@ function updatePaginationUI(page, total) {
   }, 1000);
 
   // ==========================================
-  // ระบบ Notification แจ้งเตือนฝุ่น
+  // à¸£à¸°à¸šà¸š Notification à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸à¸¸à¹ˆà¸™
   // ==========================================
   // ==========================================
-  // ระบบ Notification แจ้งเตือนฝุ่น (อัปเดตใหม่เป็น Toggle)
+  // à¸£à¸°à¸šà¸š Notification à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸à¸¸à¹ˆà¸™ (à¸­à¸±à¸›à¹€à¸”à¸•à¹ƒà¸«à¸¡à¹ˆà¹€à¸›à¹‡à¸™ Toggle)
   // ==========================================
   function toggleNotifications() {
     const cb = document.getElementById('notifToggleCb');
     
-    // ถ้าผู้ใช้กด "เปิด"
+    // à¸–à¹‰à¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸à¸” "à¹€à¸›à¸´à¸”"
     if (cb.checked) {
       if (!("Notification" in window)) {
-        showToast("เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน (Notifications)");
-        cb.checked = false; // เด้งสวิตช์กลับไปสีแดง
+        showToast("à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œà¸™à¸µà¹‰à¹„à¸¡à¹ˆà¸£à¸­à¸‡à¸£à¸±à¸šà¸à¸²à¸£à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ (Notifications)");
+        cb.checked = false; // à¹€à¸”à¹‰à¸‡à¸ªà¸§à¸´à¸•à¸Šà¹Œà¸à¸¥à¸±à¸šà¹„à¸›à¸ªà¸µà¹à¸”à¸‡
         return;
       }
       
       Notification.requestPermission().then(permission => {
         if (permission === "granted") {
           notificationsEnabled = true;
-          showToast("🟢 เปิดระบบแจ้งเตือนสำเร็จ!");
+          showToast("ðŸŸ¢ à¹€à¸›à¸´à¸”à¸£à¸°à¸šà¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸ªà¸³à¹€à¸£à¹‡à¸ˆ!");
         } else {
-          showToast("🔴 คุณปฏิเสธการแจ้งเตือน กรุณาอนุญาตในการตั้งค่าเบราว์เซอร์");
-          cb.checked = false; // เด้งสวิตช์กลับถ้าไม่อนุญาต
+          showToast("ðŸ”´ à¸„à¸¸à¸“à¸›à¸à¸´à¹€à¸ªà¸˜à¸à¸²à¸£à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ à¸à¸£à¸¸à¸“à¸²à¸­à¸™à¸¸à¸à¸²à¸•à¹ƒà¸™à¸à¸²à¸£à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸²à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ");
+          cb.checked = false; // à¹€à¸”à¹‰à¸‡à¸ªà¸§à¸´à¸•à¸Šà¹Œà¸à¸¥à¸±à¸šà¸–à¹‰à¸²à¹„à¸¡à¹ˆà¸­à¸™à¸¸à¸à¸²à¸•
         }
       });
     } 
-    // ถ้าผู้ใช้กด "ปิด"
+    // à¸–à¹‰à¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¸à¸” "à¸›à¸´à¸”"
     else {
       notificationsEnabled = false;
-      showToast("🔴 ปิดระบบแจ้งเตือนแล้ว");
+      showToast("ðŸ”´ à¸›à¸´à¸”à¸£à¸°à¸šà¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¹à¸¥à¹‰à¸§");
     }
   }
 
@@ -646,22 +653,22 @@ function updatePaginationUI(page, total) {
     const pm25 = parseFloat(lastRow['PM2.5']) || 0;
     const ts = lastRow['Timestamp'];
 
-    // แจ้งเตือนเมื่อฝุ่นเกิน 100 และต้องยังไม่เคยเตือนเวลานี้
+    // à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¹€à¸¡à¸·à¹ˆà¸­à¸à¸¸à¹ˆà¸™à¹€à¸à¸´à¸™ 100 à¹à¸¥à¸°à¸•à¹‰à¸­à¸‡à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¹€à¸•à¸·à¸­à¸™à¹€à¸§à¸¥à¸²à¸™à¸µà¹‰
     if (pm25 > 100 && ts !== lastAlertTimestamp) {
       lastAlertTimestamp = ts;
       
-      // สร้างกล่องแจ้งเตือน
-      const notification = new Notification("⚠️ แจ้งเตือนมลพิษทางอากาศ!", {
-        body: `ค่า PM2.5 ปัจจุบันพุ่งสูงถึง ${pm25.toFixed(1)} µg/m³ (ระดับอันตราย) โปรดสวมหน้ากากอนามัย N95`,
+      // à¸ªà¸£à¹‰à¸²à¸‡à¸à¸¥à¹ˆà¸­à¸‡à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™
+      const notification = new Notification("âš ï¸ à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸¡à¸¥à¸žà¸´à¸©à¸—à¸²à¸‡à¸­à¸²à¸à¸²à¸¨!", {
+        body: `à¸„à¹ˆà¸² PM2.5 à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¸žà¸¸à¹ˆà¸‡à¸ªà¸¹à¸‡à¸–à¸¶à¸‡ ${pm25.toFixed(1)} Âµg/mÂ³ (à¸£à¸°à¸”à¸±à¸šà¸­à¸±à¸™à¸•à¸£à¸²à¸¢) à¹‚à¸›à¸£à¸”à¸ªà¸§à¸¡à¸«à¸™à¹‰à¸²à¸à¸²à¸à¸­à¸™à¸²à¸¡à¸±à¸¢ N95`,
         icon: 'https://cdn-icons-png.flaticon.com/512/3209/3209935.png'
       });
 
-      // 🌟 1. สั่งให้กล่องแจ้งเตือน "ปิดตัวเองอัตโนมัติ" หลังจากผ่านไป 7 วินาที
+      // ðŸŒŸ 1. à¸ªà¸±à¹ˆà¸‡à¹ƒà¸«à¹‰à¸à¸¥à¹ˆà¸­à¸‡à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ "à¸›à¸´à¸”à¸•à¸±à¸§à¹€à¸­à¸‡à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´" à¸«à¸¥à¸±à¸‡à¸ˆà¸²à¸à¸œà¹ˆà¸²à¸™à¹„à¸› 7 à¸§à¸´à¸™à¸²à¸—à¸µ
       setTimeout(() => {
         notification.close();
       }, 7000);
 
-      // 🌟 2. สั่งให้ "ปิดทันที" ถ้าผู้ใช้เอาเมาส์ไปคลิกที่กล่องแจ้งเตือน
+      // ðŸŒŸ 2. à¸ªà¸±à¹ˆà¸‡à¹ƒà¸«à¹‰ "à¸›à¸´à¸”à¸—à¸±à¸™à¸—à¸µ" à¸–à¹‰à¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¹€à¸­à¸²à¹€à¸¡à¸²à¸ªà¹Œà¹„à¸›à¸„à¸¥à¸´à¸à¸—à¸µà¹ˆà¸à¸¥à¹ˆà¸­à¸‡à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™
       notification.onclick = () => {
         notification.close();
       };
@@ -721,16 +728,16 @@ function updatePaginationUI(page, total) {
     const d = parseTimestamp(ts);
     if (!d) return escapeHTML(String(ts));
     
-    // ใช้ dayjs ในการจัดรูปแบบวันที่แทน toLocaleString เพื่อความสม่ำเสมอ
+    // à¹ƒà¸Šà¹‰ dayjs à¹ƒà¸™à¸à¸²à¸£à¸ˆà¸±à¸”à¸£à¸¹à¸›à¹à¸šà¸šà¸§à¸±à¸™à¸—à¸µà¹ˆà¹à¸—à¸™ toLocaleString à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¸ªà¸¡à¹ˆà¸³à¹€à¸ªà¸¡à¸­
     if (short) {
-      return dayjs(d).format('HH:mm'); // แสดงแค่เวลา เช่น 18:00
+      return dayjs(d).format('HH:mm'); // à¹à¸ªà¸”à¸‡à¹à¸„à¹ˆà¹€à¸§à¸¥à¸² à¹€à¸Šà¹ˆà¸™ 18:00
     }
     
-    // แสดงวันที่เต็มแบบ ค.ศ. (เช่น 09/03/2026 18:00)
+    // à¹à¸ªà¸”à¸‡à¸§à¸±à¸™à¸—à¸µà¹ˆà¹€à¸•à¹‡à¸¡à¹à¸šà¸š à¸„.à¸¨. (à¹€à¸Šà¹ˆà¸™ 09/03/2026 18:00)
     return dayjs(d).format('DD/MM/YYYY HH:mm'); 
     
-    /* หมายเหตุ: ถ้าอยากให้แสดงผลเป็นปี พ.ศ. แบบเต็ม (เช่น 09/03/2569 18:00)
-      ให้เปลี่ยนบรรทัดบนเป็น:
+    /* à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸: à¸–à¹‰à¸²à¸­à¸¢à¸²à¸à¹ƒà¸«à¹‰à¹à¸ªà¸”à¸‡à¸œà¸¥à¹€à¸›à¹‡à¸™à¸›à¸µ à¸ž.à¸¨. à¹à¸šà¸šà¹€à¸•à¹‡à¸¡ (à¹€à¸Šà¹ˆà¸™ 09/03/2569 18:00)
+      à¹ƒà¸«à¹‰à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸šà¸£à¸£à¸—à¸±à¸”à¸šà¸™à¹€à¸›à¹‡à¸™:
       return dayjs(d).add(543, 'year').format('DD/MM/YYYY HH:mm');
     */
   }
@@ -773,7 +780,7 @@ function updatePaginationUI(page, total) {
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
     
-    // ล็อคหน้าจอพื้นหลังไม่ให้เลื่อนเวลาเปิด Popup (ถ้ามี)
+    // à¸¥à¹‡à¸­à¸„à¸«à¸™à¹‰à¸²à¸ˆà¸­à¸žà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡à¹„à¸¡à¹ˆà¹ƒà¸«à¹‰à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹€à¸§à¸¥à¸²à¹€à¸›à¸´à¸” Popup (à¸–à¹‰à¸²à¸¡à¸µ)
     document.body.style.overflow = 'hidden';
 
     setTimeout(() => { const closeBtn = modal.querySelector('.qr-close'); if (closeBtn) closeBtn.focus(); }, 0);
@@ -785,7 +792,7 @@ function updatePaginationUI(page, total) {
     }
 
     try {
-      // 🌟 ตั้งค่าให้กล่อง QR รองรับการวางโลโก้ทับแบบ CSS
+      // ðŸŒŸ à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸²à¹ƒà¸«à¹‰à¸à¸¥à¹ˆà¸­à¸‡ QR à¸£à¸­à¸‡à¸£à¸±à¸šà¸à¸²à¸£à¸§à¸²à¸‡à¹‚à¸¥à¹‚à¸à¹‰à¸—à¸±à¸šà¹à¸šà¸š CSS
       wrap.style.position = 'relative';
 
       _qrInstance = new QRCode(wrap, {
@@ -797,7 +804,7 @@ function updatePaginationUI(page, total) {
         correctLevel: QRCode.CorrectLevel.H
       });
 
-      // 🌟 สร้างโลโก้และใช้ CSS แปะทับตรงกลาง
+      // ðŸŒŸ à¸ªà¸£à¹‰à¸²à¸‡à¹‚à¸¥à¹‚à¸à¹‰à¹à¸¥à¸°à¹ƒà¸Šà¹‰ CSS à¹à¸›à¸°à¸—à¸±à¸šà¸•à¸£à¸‡à¸à¸¥à¸²à¸‡
       const logoSize = 48;
       const logoDiv = document.createElement('div');
       logoDiv.style.position = 'absolute';
@@ -814,7 +821,7 @@ function updatePaginationUI(page, total) {
       logoDiv.style.alignItems = 'center';
       logoDiv.style.justifyContent = 'center';
       
-      // วาดไอคอนใบไม้ด้านใน
+      // à¸§à¸²à¸”à¹„à¸­à¸„à¸­à¸™à¹ƒà¸šà¹„à¸¡à¹‰à¸”à¹‰à¸²à¸™à¹ƒà¸™
       logoDiv.innerHTML = `
         <div style="width:100%;height:100%;background:linear-gradient(135deg,#0284c7,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;">
           <svg width="26" height="26" viewBox="0 0 80 80" fill="none">
@@ -834,7 +841,7 @@ function updatePaginationUI(page, total) {
     }
   }
 
-  // อัปเดตฟังก์ชันปิด QR ให้คลายการล็อคหน้าจอด้วย
+  // à¸­à¸±à¸›à¹€à¸”à¸•à¸Ÿà¸±à¸‡à¸à¹Œà¸Šà¸±à¸™à¸›à¸´à¸” QR à¹ƒà¸«à¹‰à¸„à¸¥à¸²à¸¢à¸à¸²à¸£à¸¥à¹‡à¸­à¸„à¸«à¸™à¹‰à¸²à¸ˆà¸­à¸”à¹‰à¸§à¸¢
   function closeQR() {
     const modal = document.getElementById('qrModal');
     modal.classList.remove('show');
@@ -857,10 +864,10 @@ function updatePaginationUI(page, total) {
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
 
-    // 🌟 ล็อคไม่ให้หน้าจอพื้นหลังเลื่อนได้
+    // ðŸŒŸ à¸¥à¹‡à¸­à¸„à¹„à¸¡à¹ˆà¹ƒà¸«à¹‰à¸«à¸™à¹‰à¸²à¸ˆà¸­à¸žà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸”à¹‰
     document.body.style.overflow = 'hidden';
 
-    // เรียกใช้ flatpickr สำหรับช่องเลือกวันที่ใน Modal
+    // à¹€à¸£à¸µà¸¢à¸à¹ƒà¸Šà¹‰ flatpickr à¸ªà¸³à¸«à¸£à¸±à¸šà¸Šà¹ˆà¸­à¸‡à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¸—à¸µà¹ˆà¹ƒà¸™ Modal
     if (!pdfDatePicker && global.flatpickr) {
       pdfDatePicker = global.flatpickr('#pdfDateFilter', {
         dateFormat: 'd/m/Y',
@@ -871,7 +878,7 @@ function updatePaginationUI(page, total) {
       });
     }
 
-    // ซิงค์วันที่จากตารางหลักมาใส่ให้เป็นค่าเริ่มต้น
+    // à¸‹à¸´à¸‡à¸„à¹Œà¸§à¸±à¸™à¸—à¸µà¹ˆà¸ˆà¸²à¸à¸•à¸²à¸£à¸²à¸‡à¸«à¸¥à¸±à¸à¸¡à¸²à¹ƒà¸ªà¹ˆà¹ƒà¸«à¹‰à¹€à¸›à¹‡à¸™à¸„à¹ˆà¸²à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™
     const currentTableFilter = document.getElementById('dateFilter').value;
     if (pdfDatePicker) {
       pdfDatePicker.setDate(currentTableFilter);
@@ -885,11 +892,11 @@ function updatePaginationUI(page, total) {
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
 
-    // 🌟 ปลดล็อคให้หน้าจอพื้นหลังกลับมาเลื่อนได้ตามปกติ
+    // ðŸŒŸ à¸›à¸¥à¸”à¸¥à¹‡à¸­à¸„à¹ƒà¸«à¹‰à¸«à¸™à¹‰à¸²à¸ˆà¸­à¸žà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡à¸à¸¥à¸±à¸šà¸¡à¸²à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸”à¹‰à¸•à¸²à¸¡à¸›à¸à¸•à¸´
     document.body.style.overflow = '';
   }
 
-  // ปิด Modal เมื่อกดปุ่ม Escape (ใส่เพิ่มต่อจาก EventListener ของ QR Modal ได้เลย)
+  // à¸›à¸´à¸” Modal à¹€à¸¡à¸·à¹ˆà¸­à¸à¸”à¸›à¸¸à¹ˆà¸¡ Escape (à¹ƒà¸ªà¹ˆà¹€à¸žà¸´à¹ˆà¸¡à¸•à¹ˆà¸­à¸ˆà¸²à¸ EventListener à¸‚à¸­à¸‡ QR Modal à¹„à¸”à¹‰à¹€à¸¥à¸¢)
   document.addEventListener('keydown', e => { 
     if (e.key === 'Escape') { closeQR(); closeExportModal(); } 
   });
@@ -963,9 +970,9 @@ function updatePaginationUI(page, total) {
   }
 
   // ==========================================
-  // 🤖 ระบบ AI Analyst (Gemini)
+  // ðŸ¤– à¸£à¸°à¸šà¸š AI Analyst (Gemini)
   // ==========================================
-  let isAiFetched = false; // ตัวแปรเช็คว่าเคยให้ AI วิเคราะห์หรือยัง
+  let isAiFetched = false; // à¸•à¸±à¸§à¹à¸›à¸£à¹€à¸Šà¹‡à¸„à¸§à¹ˆà¸²à¹€à¸„à¸¢à¹ƒà¸«à¹‰ AI à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œà¸«à¸£à¸·à¸­à¸¢à¸±à¸‡
 
   async function requestAIUpdate() {
     const aiTextEl = document.getElementById('aiSummaryText');
@@ -973,29 +980,29 @@ function updatePaginationUI(page, total) {
     
     if (!aiTextEl || !scriptUrl) return;
     if (!allData || allData.length === 0) {
-      aiTextEl.textContent = 'ยังไม่มีข้อมูลสำหรับให้ AI วิเคราะห์ครับ';
+      aiTextEl.textContent = 'à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸³à¸«à¸£à¸±à¸šà¹ƒà¸«à¹‰ AI à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œà¸„à¸£à¸±à¸š';
       return;
     }
 
-    // ดึงข้อมูลแถวล่าสุด
+    // à¸”à¸¶à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹à¸–à¸§à¸¥à¹ˆà¸²à¸ªà¸¸à¸”
     const latest = allData[allData.length - 1];
     const pm25 = parseFloat(latest['PM2.5']) || 0;
     const temp = parseFloat(latest['Temperature']) || 0;
     const hum = parseFloat(latest['Humidity']) || 0;
 
-    aiTextEl.innerHTML = '<span style="color: #0284c7;">กำลังใช้ความคิด... (รอประมาณ 5-8 วินาที) ⏳</span>';
+    aiTextEl.innerHTML = '<span style="color: #0284c7;">à¸à¸³à¸¥à¸±à¸‡à¹ƒà¸Šà¹‰à¸„à¸§à¸²à¸¡à¸„à¸´à¸”... (à¸£à¸­à¸›à¸£à¸°à¸¡à¸²à¸“ 5-8 à¸§à¸´à¸™à¸²à¸—à¸µ) â³</span>';
     
     try {
-      // เรียกไปยัง Apps Script พร้อมแนบค่าพารามิเตอร์
+      // à¹€à¸£à¸µà¸¢à¸à¹„à¸›à¸¢à¸±à¸‡ Apps Script à¸žà¸£à¹‰à¸­à¸¡à¹à¸™à¸šà¸„à¹ˆà¸²à¸žà¸²à¸£à¸²à¸¡à¸´à¹€à¸•à¸­à¸£à¹Œ
       const url = `${scriptUrl}?action=getAI&pm25=${pm25}&temp=${temp}&hum=${hum}`;
       const response = await fetch(url);
       const text = await response.text();
       
-      // แสดงผลที่ได้จาก AI
-      aiTextEl.innerHTML = `<strong>บทวิเคราะห์:</strong> ${escapeHTML(text)}`;
+      // à¹à¸ªà¸”à¸‡à¸œà¸¥à¸—à¸µà¹ˆà¹„à¸”à¹‰à¸ˆà¸²à¸ AI
+      aiTextEl.innerHTML = `<strong>à¸šà¸—à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ:</strong> ${escapeHTML(text)}`;
     } catch (err) {
       console.error(err);
-      aiTextEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อกับสมอง AI ครับ 😅';
+      aiTextEl.textContent = 'à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”à¹ƒà¸™à¸à¸²à¸£à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¸à¸±à¸šà¸ªà¸¡à¸­à¸‡ AI à¸„à¸£à¸±à¸š ðŸ˜…';
     }
   }
 
@@ -1021,8 +1028,8 @@ function updatePaginationUI(page, total) {
   // Maintain backward compatibility with existing inline handlers (if any)
   global.loadData         = loadData;
   global.confirmExportPDF = confirmExportPDF;
-  global.openExportModal  = openExportModal;  // <--- เพิ่มบรรทัดนี้
-  global.closeExportModal = closeExportModal; // <--- เพิ่มบรรทัดนี้
+  global.openExportModal  = openExportModal;  // <--- à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸£à¸£à¸—à¸±à¸”à¸™à¸µà¹‰
+  global.closeExportModal = closeExportModal; // <--- à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸£à¸£à¸—à¸±à¸”à¸™à¸µà¹‰
   global.downloadCSV      = downloadCSV;
   global.filterByDate     = filterByDate;
   global.clearDateFilter  = clearDateFilter;
@@ -1043,4 +1050,6 @@ function updatePaginationUI(page, total) {
     bootstrap();
   }
 })(window);
+
+
 

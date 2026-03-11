@@ -1,4 +1,4 @@
-// charts.js — Chart.js and gauge initialization
+﻿// charts.js â€” Chart.js and gauge initialization
 
 
 const hasChartLib = !!window.Chart;
@@ -82,6 +82,11 @@ function makeChart(id, datasets, yLabel) {
 
 function initCharts() {
     if (!hasChartLib) {
+    const status = document.getElementById('chartStatus');
+    if (status) {
+      status.textContent = 'Charts unavailable (Chart.js failed to load).';
+      status.classList.add('warn');
+    }
       ['chartPm25', 'chartPm10', 'chartTempHum'].forEach(id => {
         const canvas = document.getElementById(id);
         if (!canvas || !canvas.parentElement) return;
@@ -200,6 +205,11 @@ function initCharts() {
 
 
 function updateCharts(rows) {
+    const status = document.getElementById('chartStatus');
+    if (status) {
+      status.textContent = '';
+      status.classList.remove('warn');
+    }
     if (!hasChartLib || !charts.pm25 || !charts.pm10 || !charts.tempHum) return;
     const slice = rows.slice(-30);
 
@@ -257,7 +267,7 @@ function initGauge() {
 
 /**
  * updateGauge(gaugeId, numId, value, maxVal)
- * Generic gauge updater — eliminates duplicated code between PM2.5 and PM10 gauges.
+ * Generic gauge updater â€” eliminates duplicated code between PM2.5 and PM10 gauges.
  *   gaugeId : id of the <path> fill element   (e.g. 'gaugeFill', 'gaugeFill10')
  *   numId   : id of the numeric label element  (e.g. 'gaugeNum',  'gaugeNum10')
  *   value   : current reading
@@ -276,4 +286,9 @@ function updateGauge(gaugeId, numId, value, maxVal) {
 // Convenience wrappers used by script.js (keep original call-sites unchanged)
 function updateGaugePm25(value)  { updateGauge('gaugeFill',   'gaugeNum',   value, 150); }
 function updateGaugePm10(value)  { updateGauge('gaugeFill10', 'gaugeNum10', value, 300); }
+
+
+
+
+
 
