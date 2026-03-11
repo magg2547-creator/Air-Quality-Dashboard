@@ -368,8 +368,6 @@ function updatePaginationUI(page, total) {
     showToast('Unexpected error occurred. Please reload the page.');
   });
 
-   param($m) $m.Value + $insert 
-
   function topBarStart() {
     const b = document.getElementById('topBar');
     b.style.transition = 'width .3s ease, opacity .1s ease';

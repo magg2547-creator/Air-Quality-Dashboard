@@ -1,5 +1,5 @@
 ﻿// sw.js â€” Optimized Service Worker
-const BUILD_VERSION = '20260311-MODULAR'; 
+const BUILD_VERSION = '20260311-FIX1'; 
 const CACHE_NAME = `aqm-v${BUILD_VERSION}`;
 const STATIC_ASSETS = [
   './',
