@@ -3,6 +3,50 @@
 (function (global) {
 
 
+
+  function setLoadingState(active) {
+    const analytics = document.querySelectorAll('.analytics-value, .gauge-number');
+    analytics.forEach(el => el.classList.toggle('skeleton', active));
+    const charts = document.querySelectorAll('.chart-container');
+    charts.forEach(el => el.classList.toggle('loading', active));
+  }
+
+  function getChartRows(rows) {
+    if (!rows) return [];
+    if (chartRange === 'all') return rows;
+    return rows.slice(-chartRange);
+  }
+
+  function updateChartsWithRange(rows) {
+    updateCharts(getChartRows(rows || allData));
+  }
+
+  function updateChartRangeUI() {
+    document.querySelectorAll('.chart-range-btn').forEach(btn => {
+      const active = String(chartRange) === btn.dataset.range;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function setChartRange(val) {
+    if (val === 'all') {
+      chartRange = 'all';
+    } else {
+      const parsed = parseInt(val, 10);
+      chartRange = Number.isFinite(parsed) ? parsed : 30;
+    }
+    updateChartRangeUI();
+    updateChartsWithRange(allData);
+  }
+
+  function bindChartRangeControls() {
+    const buttons = document.querySelectorAll('.chart-range-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => setChartRange(btn.dataset.range));
+    });
+    updateChartRangeUI();
+  }
   /* ===================================================
      STATE & AUTO-REFRESH & NOTIFICATION
   =================================================== */
@@ -921,6 +965,10 @@ function updatePaginationUI(page, total) {
     bootstrap();
   }
 })(window);
+
+
+
+
 
 
 
